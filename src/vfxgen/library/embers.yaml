@@ -1,0 +1,48 @@
+vfxgen: 1
+name: embers
+description: Field of drifting, swaying, twinkling embers and sparks.
+size: [256, 256]
+fps: 24
+duration: "${32 / 24}"
+loop: true
+vars:
+  colors: {default: fire, doc: main colour ramp}
+  count: {default: 60, min: 0, max: 400, doc: number of embers}
+  speed: {default: 1, min: 1, max: 6, doc: base rise laps per loop (whole number keeps the loop seamless)}
+  sway: {default: 1.0, min: 0, max: 3, doc: sideways sway amount}
+  size_mult: {default: 1.0, min: 0.2, max: 4, doc: ember size multiplier}
+  brightness: {default: 1.0, min: 0, max: 4, doc: brightness multiplier}
+  trail: {default: 1.0, min: 0, max: 4, doc: motion streak length multiplier (0 = round dots)}
+  twinkle: {default: 1.0, min: 0, max: 2, doc: twinkle strength (0 = steady)}
+channels:
+  light: {kind: light, palette: "${colors}", bloom: [[1.5, 0.5], [5, 0.35]], exposure: 1.0, alpha_gamma: 0.8}
+layers:
+  - id: embers
+    effect: particles
+    at: [128, 236]
+    anchor: {px: [0, 0]}
+    params:
+      count: "${int(count)}"
+      period: "${32 / 24}"
+      shape: box
+      radius: 92
+      radius_y: 0
+      angle: -90
+      spread: 8
+      speed_min: "${135 * int(round(speed))}"
+      speed_max: "${162 * int(round(speed))}"
+      laps_min: "${int(round(speed))}"
+      laps_max: "${int(round(speed))}"
+      sway: "${10 * sway}"
+      sway_freq: 1.5
+      style: streak
+      tail: "${0.027 * trail}"
+      size: "${0.95 * size_mult}"
+      brightness: "${3.0 * brightness}"
+      brightness_var: 0.7
+      twinkle: "${min(0.45 * twinkle, 1)}"
+      twinkle_rate: 3
+      halo: 0.06
+      fade_in: 0.4
+      fade_out: 0.8
+      extent: 270

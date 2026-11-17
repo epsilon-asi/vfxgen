@@ -1,0 +1,48 @@
+vfxgen: 1
+name: smoke
+description: Rising column of billowing, self-shadowed grey smoke.
+size: [256, 384]
+fps: 16
+duration: 2.0
+loop: true
+anchors: {base: [128, 332]}
+vars:
+  colors: {default: smoke, doc: smoke colour ramp (shadow -> lit)}
+  puffs: {default: 34, min: 1, max: 120, doc: number of puffs in the column}
+  height: {default: 1.0, min: 0.2, max: 1.15, doc: column height multiplier (keep <= ~1.15 to stay in frame)}
+  width: {default: 1.0, min: 0.3, max: 1.6, doc: column width / puff size multiplier}
+  density: {default: 1.0, min: 0, max: 4, doc: smoke opacity multiplier}
+  speed: {default: 1, min: 1, max: 6, doc: rise laps per loop (whole number keeps the loop seamless)}
+  sway: {default: 1.0, min: 0, max: 3, doc: sideways drift / sway amount}
+  wispiness: {default: 1.0, min: 0, max: 2, doc: how strongly puffs erode into wisps as they rise}
+  relief: {default: 1.0, min: 0, max: 3, doc: strength of the billow lighting (0 = flat)}
+  light_angle: {default: -122.0, min: -180, max: 180, doc: "direction toward the light in degrees (screen, -90 = straight up)"}
+channels:
+  smoke: {kind: smoke, palette: "${colors}", density: "${5.0 * density}", shadow: 1.0, relief: "${relief}",
+          ambient: 0.18, height_gain: 0.8, size_ref: 384,
+          light_dir: ["${cos(light_angle * pi / 180)}", "${sin(light_angle * pi / 180)}"]}
+layers:
+  - id: column
+    effect: smoke_puffs
+    at: [128, 332]
+    anchor: origin
+    params:
+      mode: column
+      period: 2.0
+      count: "${int(puffs)}"
+      laps: "${int(round(speed))}"
+      rise: "${252 * height}"
+      spread: "${20 * width}"
+      spread_start: "${5 * width}"
+      sway: "${14 * sway}"
+      drift: "${10 * sway}"
+      radius_start: "${14 * width}"
+      radius_end: "${54 * width}"
+      radius_var: 0.2
+      density: "${0.2 * 34 / int(puffs)}"
+      billow: 0.85
+      wisp_start: 0.15
+      wispiness: "${0.45 * wispiness}"
+      fade_in: 0.12
+      fade_out: 0.5
+      spin: 1.0

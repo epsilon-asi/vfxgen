@@ -1,0 +1,40 @@
+vfxgen: 1
+name: burning_sprite
+description: "Character on fire (loop): flame tongues lick up from the head and shoulders, embers swirl up, dark smoke rises, the body glows hot at the edges."
+size: [208, 256]
+fps: 16
+duration: 2.0
+loop: true
+blend: alpha
+pivot: {px: [104, 236]}
+anchors: {feet: [104, 236]}
+vars:
+  colors: {default: fire, doc: "flame / ember colour ramp"}
+  smoke_palette: {default: dark_smoke, doc: smoke colour ramp (shadow -> lit)}
+  image: {default: hero.png, doc: "sprite image (PNG with alpha)"}
+  height: {default: 128, min: 16, max: 150, doc: displayed sprite height (px)}
+  flames: {default: 18, min: 0, max: 80, doc: number of flame tongues}
+  flame_height: {default: 22, min: 4, max: 50, doc: flame tongue height (px)}
+  embers: {default: 40, min: 0, max: 300, doc: number of embers}
+  smoke: {default: 0.7, min: 0, max: 3, doc: smoke density (0 = off)}
+  heat: {default: 0.5, min: 0, max: 2, doc: glow on the burning edges}
+  scorch: {default: 0.3, min: 0, max: 1, doc: orange-red scorch tint on the body}
+channels:
+  smoke: {kind: smoke, palette: "${smoke_palette}", density: 1.0, shadow: 0.4, size_ref: 256}
+  solid: {kind: solid}
+  light: {kind: light, palette: "${colors}", bloom: [[1.5, 0.5], [5, 0.45], [12, 0.25]], exposure: 1.0, alpha_gamma: 0.8}
+layers:
+  - id: sprite
+    effect: sprite_loop
+    at: [104, 236]
+    anchor: {px: [0, 0]}
+    params: {period: 2.0, image: "${image}", height: "${height}", tint: "${scorch}", tint_palette: "#ff5a1a",
+             cover: 0.55, rim: "${0.5 * heat}", pulse: 0.2, pulse_cycles: 3}
+  - id: fire
+    effect: sprite_emitter
+    at: [104, 236]
+    anchor: {px: [0, 0]}
+    params: {period: 2.0, image: "${image}", height: "${height}", style: burning, region: top_edge,
+             flames: "${flames}", flame_height: "${flame_height}", flame_width: 3.6, heat: "${heat}",
+             smoke: "${smoke}", count: "${embers}", speed_min: 20, speed_max: 60, gravity: -60, curl: 30,
+             curl_scale: 30, size: 1.0, brightness: 1.8, halo: 0.12, extent: 70}

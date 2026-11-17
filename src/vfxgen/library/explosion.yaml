@@ -1,0 +1,78 @@
+vfxgen: 1
+name: explosion
+description: "Fireball explosion: flash, shockwave, sparks and burning debris, cooling into billowing smoke."
+size: [384, 384]
+fps: 18
+duration: 1.5
+loop: false
+anchors: {blast: [192, 238.08]}
+vars:
+  colors: {default: fire, doc: main colour ramp (fire / flash / sparks)}
+  smoke_palette: {default: explosion_smoke, doc: colour ramp of the smoke (shadow -> lit)}
+  radius: {default: 1.0, min: 0.2, max: 1.3, doc: fireball / smoke cloud size multiplier (keep <= ~1.15 to stay in frame)}
+  intensity: {default: 1.0, min: 0, max: 4, doc: fire brightness multiplier}
+  burn_time: {default: 1.0, min: 0.2, max: 3, doc: how long the fire keeps burning inside the smoke (multiplier)}
+  smoke_amount: {default: 1.0, min: 0, max: 3, doc: "smoke density multiplier (0 = pure fireball, no smoke)"}
+  puffs: {default: 22, min: 1, max: 80, doc: number of billow puffs forming the cloud}
+  turbulence: {default: 1.0, min: 0, max: 3, doc: billow / break-up noise strength}
+  rise: {default: 1.0, min: 0, max: 3, doc: how far the cloud drifts upward}
+  sparks: {default: 70, min: 0, max: 400, doc: number of flying spark streaks (0 = off)}
+  debris: {default: 8, min: 0, max: 40, doc: number of burning debris chunks with smoke trails (0 = off)}
+  shockwave: {default: true, doc: draw the expanding shockwave ring}
+  flash: {default: true, doc: draw the initial white flash}
+  fire_light: {default: 0.8, min: 0, max: 3, doc: how much the fire tints the surrounding smoke}
+channels:
+  smoke: {kind: smoke, palette: "${smoke_palette}", density: 1.2, shadow: 1.0, size_ref: 384,
+          lit_by: {channels: [light], amount: "${fire_light}"}}
+  light: {kind: light, palette: "${colors}", bloom: [[2, 0.25], [8, 0.2], [24, 0.15]], exposure: 1.0,
+          alpha_gamma: 0.75}
+# every layer spans the whole 1.5 s and shares the legacy front-loaded time mapping
+# t = 1.5 * (0.02 + 0.98 u^1.35) ~= 1.5 * (0.0552 + 0.9448 u)^1.35: power warp, started early and slowed
+# slightly so frame 0 is at t = 0.03 s and the last frame at t = 1.5 s
+layers:
+  - id: flash
+    effect: flash
+    enabled: "${flash}"
+    at: [192, 238.08]
+    start: -0.0876
+    speed: 0.9448
+    time_warp: &warp {curve: power, exp: 1.35}
+    params: {duration: 1.5, radius: "${40 * radius}", grow: 0, brightness: "${4.0 * intensity}", decay: 0.035,
+             afterglow_radius: "${70 * radius}", afterglow_brightness: "${0.5 * intensity}", afterglow_decay: 0.05}
+  - id: shockwave
+    effect: shockwave
+    enabled: "${shockwave}"
+    at: [192, 238.08]
+    start: -0.0876
+    speed: 0.9448
+    time_warp: *warp
+    params: {duration: 1.5, radius_start: 24, radius_end: 164, expand_time: 0.1, width_start: 1.41,
+             width_end: 10.96, brightness: 0.7, fade_time: 0.07, breakup: 0.3, breakup_scale: 3}
+  - id: cloud
+    effect: fire_cloud
+    at: [192, 238.08]
+    anchor: blast
+    start: -0.0876
+    speed: 0.9448
+    time_warp: *warp
+    params: {duration: 1.5, radius: "${84 * radius}", creep: "${30 * radius}", count: "${int(puffs)}",
+             rise: "${36 * rise}", puff_rise: "${36 * rise}", intensity: "${intensity}", burn_time: "${burn_time}",
+             smoke: "${smoke_amount}", turbulence: "${turbulence}"}
+  - id: sparks
+    effect: burst
+    at: [192, 238.08]
+    anchor: {px: [0, 0]}
+    start: -0.0876
+    speed: 0.9448
+    time_warp: *warp
+    params: {duration: 1.5, count: "${int(sparks)}", shape: point, spread: 360, speed_min: 200, speed_max: 380,
+             drag: 2.2, gravity: 300, life_min: 0.2, life_max: 0.6, style: streak, tail: 0.05, size: 0.85,
+             brightness: 1.9, brightness_var: 0.37, fade_in: 0, fade_out: 1.3, extent: 170}
+  - id: debris
+    effect: debris_trails
+    at: [192, 238.08]
+    anchor: {px: [0, 0]}
+    start: -0.0876
+    speed: 0.9448
+    time_warp: *warp
+    params: {duration: 1.5, count: "${int(debris)}", smoke: "${smoke_amount}"}

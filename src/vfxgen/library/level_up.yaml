@@ -1,0 +1,93 @@
+vfxgen: 1
+name: level_up
+description: "Level up: a burst of light at the feet, glowing rings rising up the body with sparks and motes, then \"LEVEL UP\" pops in letter by letter with a punch and fades."
+size: [320, 256]
+fps: 30
+duration: 1.6
+loop: false
+blend: alpha
+pivot: {px: [160, 216]}
+vars:
+  colors: {default: holy, doc: "light colour ramp (rings, burst, glow)"}
+  text_palette: {default: text_gold, doc: text fill colours (dark -> light)}
+  outline_palette: {default: "#2b1205", doc: text outline / shadow colour}
+  text: {default: LEVEL UP, doc: "the banner text (digits, A-Z, + - ! % x)"}
+  text_size: {default: 1.0, min: 0.4, max: 1.6, doc: text size multiplier}
+  rings: {default: 3, min: 0, max: 6, doc: number of rising rings}
+  ring_size: {default: 1.0, min: 0.3, max: 1.8, doc: ring radius multiplier}
+  height: {default: 1.0, min: 0.2, max: 1.4, doc: how high the rings rise (multiplier)}
+  sparks: {default: 26, min: 0, max: 120, doc: sparks bursting up from the feet}
+  motes: {default: 18, min: 0, max: 120, doc: slow rising motes}
+  punch: {default: 0.3, min: 0, max: 1, doc: text punch (scale pop) amount}
+  glow: {default: 1.0, min: 0, max: 3, doc: light exposure}
+channels:
+  back: {kind: light, palette: "${colors}", exposure: "${glow}", bloom: [[2, 0.45], [7, 0.4], [18, 0.3]],
+         alpha_gamma: 0.8}
+  text: {kind: solid, palette: "${text_palette}"}
+  light: {kind: light, palette: "${colors}", exposure: "${glow}", bloom: [[1.2, 0.5], [4, 0.4], [12, 0.3]],
+          alpha_gamma: 0.8}
+events:
+  - {name: level_up, t: 0.0, data: {}}
+  - {name: banner, t: 0.3, data: {}}
+layers:
+  - id: flash
+    effect: flash
+    at: [160, 216]
+    channels: {light: back}
+    scale: [1.0, 0.45]
+    params: {duration: 0.6, radius: 10, grow: 90, brightness: 2.4, decay: 0.07, afterglow_radius: 40,
+             afterglow_brightness: 0.5, afterglow_decay: 0.18}
+  - id: ground_ring
+    effect: shockwave
+    at: [160, 216]
+    channels: {light: back}
+    params: {duration: 0.6, radius_start: 10, radius_end: "${70 * ring_size}", expand_time: 0.12, width_start: 2.5,
+             width_end: 1.2, brightness: 1.2, fade_time: 0.2, squash: 0.3}
+  - id: rings
+    effect: ring
+    enabled: "${rings > 0}"
+    at: [160, 216]
+    start: 0.05
+    length: 0.9
+    fade: {in: 0.08, out: 0.45}
+    offset: {keys: [[0, [0, 0]], [0.9, [0, "${-150 * height}"], out]]}
+    scale: {keys: [[0, 0.55], [0.9, 1.0, out]]}
+    channels: {light: light}
+    repeat: {count: "${max(rings, 1)}", every: 0.12, ramp: {scale: [1.0, 0.75]}}
+    params: {period: 0.9, radius: "${44 * ring_size}", width: 1.8, brightness: 1.3, squash: 0.3}
+  - id: sparks
+    effect: burst
+    at: [160, 216]
+    anchor: {px: [0, 0]}
+    channels: {light: light}
+    params: {duration: 0.9, count: "${sparks}", shape: ellipse, radius: "${30 * ring_size}", radius_y: 6,
+             angle: -90, spread: 30, speed_min: 120, speed_max: "${300 * height}", drag: 2.5, gravity: 120,
+             life_min: 0.5, life_max: 0.9, style: streak, tail: 0.05, size: 1.1, brightness: 1.8, fade_in: 0,
+             fade_out: 1.4, extent: 175}
+  - id: motes
+    effect: burst
+    at: [160, 216]
+    anchor: {px: [0, 0]}
+    channels: {light: light}
+    params: {duration: 1.4, count: "${motes}", shape: ellipse, radius: "${40 * ring_size}", radius_y: 8,
+             angle: -90, spread: 20, speed_min: 40, speed_max: 110, gravity: -40, sway: 4, sway_freq: 2,
+             stagger: 0.5, life_min: 0.6, life_max: 0.9, style: plus, size: 1.0, brightness: 1.4, twinkle: 0.5,
+             twinkle_rate: 6, fade_in: 0.2, fade_out: 1.2, extent: 200}
+  - id: banner_glints
+    effect: glints
+    start: 0.3
+    at: [160, 72]
+    anchor: {px: [0, 0]}
+    time_mode: once
+    channels: {light: light}
+    params: {period: 0.7, mode: burst, count: 6, spread: "${54 * text_size}", size: 0.6, line_width: 0.8,
+             flash: 0.4, sustain: 1.2, fade_from: 0.4, shrink: 0.6, travel: 0.8}
+  - id: banner
+    effect: text
+    start: 0.25
+    at: [160, 72]
+    channels: {solid: text, light: back}
+    feel: {punch: [{at: 0.32, duration: 0.4, amount: "${punch}"}]}
+    params: {duration: 1.35, text: "${text}", size: "${24 * text_size}", weight: 0.22, outline: 0.1,
+             outline_palette: "${outline_palette}", shadow: 0.08, glow: 0.45, glow_radius: 0.3, stagger: 0.035,
+             pop: 0.16, overshoot: 0.5, rise: 0.35, fade: 0.35, fade_scale: 1.08}

@@ -1,0 +1,40 @@
+vfxgen: 1
+name: electrified_sprite
+description: "Electrified character (loop): jagged arcs crawl along the silhouette, sparks spit off, the body shivers and flickers to white."
+size: [192, 240]
+fps: 16
+duration: 2.0
+loop: true
+blend: alpha
+pivot: {px: [96, 196]}
+anchors: {feet: [96, 196]}
+vars:
+  colors: {default: electric, doc: "arc / spark / glow colour ramp"}
+  image: {default: hero.png, doc: "sprite image (PNG with alpha)"}
+  height: {default: 128, min: 16, max: 150, doc: displayed sprite height (px)}
+  arcs: {default: 6, min: 0, max: 30, doc: arcs alive at a time}
+  arc_length: {default: 26, min: 6, max: 60, doc: arc span (px)}
+  arc_rate: {default: 16, min: 2, max: 32, doc: arc re-jags per second}
+  sparks: {default: 24, min: 0, max: 200, doc: number of sparks}
+  flicker: {default: 0.2, min: 0, max: 1, doc: chance per tick that the body flashes}
+  shiver: {default: 1.0, min: 0, max: 4, doc: body shiver (px)}
+channels:
+  solid: {kind: solid}
+  light: {kind: light, palette: "${colors}", bloom: [[1.5, 0.5], [5, 0.45], [12, 0.25]], exposure: 1.0, alpha_gamma: 0.8}
+layers:
+  - id: sprite
+    effect: sprite_loop
+    at: [96, 196]
+    anchor: {px: [0, 0]}
+    params: {period: 2.0, image: "${image}", height: "${height}", outline: 0.22, rim: 0.4, pulse: 0.0,
+             flicker: "${flicker}", flicker_rate: 16, flash: 0.75, flash_palette: "#d8f0ff", shiver: "${shiver}",
+             tint: 0.15, tint_palette: "#7fb4ff"}
+  - id: arcs
+    effect: sprite_emitter
+    at: [96, 196]
+    anchor: {px: [0, 0]}
+    params: {period: 2.0, image: "${image}", height: "${height}", style: electrified, region: edge,
+             arcs: "${arcs}", arc_length: "${arc_length}", arc_rate: "${arc_rate}", heat: 0.12,
+             count: "${sparks}", direction: normal, speed_min: 50, speed_max: 140, gravity: 260, drag: 1.0,
+             curl: 0, laps_min: 2, laps_max: 4, particle_style: streak, size: 0.9, brightness: 2.2, halo: 0.1,
+             extent: 50}

@@ -1,0 +1,39 @@
+vfxgen: 1
+name: light_shafts
+description: God rays - soft angled beams of light falling from above, flickering slowly, with dust motes glinting inside the light.
+size: [256, 256]
+fps: 16
+duration: 4.0
+loop: true
+blend: additive
+pivot: source
+anchors: {source: [84, 4]}
+vars:
+  colors: {default: sunbeam, doc: light colour ramp (faint -> hot)}
+  beams: {default: 6, min: 1, max: 16, doc: number of beams}
+  angle: {default: 22, min: -40, max: 40, doc: lean of the beams from vertical (deg)}
+  beam_width: {default: 1.0, min: 0.3, max: 3, doc: beam width multiplier}
+  brightness: {default: 1.0, min: 0, max: 4, doc: beam intensity multiplier}
+  flicker: {default: 0.4, min: 0, max: 1, doc: slow noise flicker depth}
+  streaks: {default: 0.5, min: 0, max: 1, doc: noise streaks running along the beams}
+  haze: {default: 1.0, min: 0, max: 4, doc: soft glow filling the shaft area}
+  dust: {default: 40, min: 0, max: 200, doc: dust motes drifting in the beams}
+channels:
+  light: {kind: light, palette: "${colors}", bloom: [[2, 0.2], [8, 0.15]], exposure: 1.0, alpha_gamma: 0.9}
+layers:
+  - id: rays
+    effect: god_rays
+    at: [84, 4]
+    anchor: {px: [0, 0]}
+    params:
+      period: 4.0
+      width: 150
+      length: 236
+      angle: "${angle}"
+      beams: "${int(beams)}"
+      beam_width: "${9 * beam_width}"
+      brightness: "${0.45 * brightness}"
+      flicker: "${flicker}"
+      streaks: "${streaks}"
+      haze: "${0.12 * haze}"
+      dust: "${int(dust)}"

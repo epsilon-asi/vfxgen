@@ -1,0 +1,42 @@
+vfxgen: 1
+name: falling_leaves
+description: Autumn leaves drifting down - small flat-shaded leaves swaying like pendulums, spinning and flipping over to show their darker backs.
+size: [256, 256]
+fps: 16
+duration: 4.0
+loop: true
+blend: alpha
+pivot: center
+vars:
+  colors: {default: autumn, doc: leaf colour ramp (dark -> bright; each leaf picks a colour along it)}
+  count: {default: 16, min: 0, max: 80, doc: number of leaves}
+  shape: {default: mixed, choices: [oval, maple, mixed], doc: leaf outline}
+  size: {default: 1.0, min: 0.3, max: 3, doc: leaf size multiplier}
+  speed: {default: 1.0, min: 0.3, max: 3, doc: fall speed multiplier}
+  wind: {default: 12, min: -80, max: 80, doc: sideways drift (px/s; negative = to the left)}
+  sway: {default: 1.0, min: 0, max: 3, doc: pendulum sway amount}
+  spin: {default: 1.0, min: 0, max: 4, doc: spinning amount}
+  flip: {default: 1.0, min: 0, max: 4, doc: how often leaves flip over}
+  variety: {default: 0.6, min: 0, max: 1, doc: spread of leaf colours along the palette}
+channels:
+  solid: {kind: solid, palette: "${colors}"}
+layers:
+  - id: leaves
+    effect: leaf_fall
+    at: [128, 128]
+    anchor: {px: [0, 0]}
+    params:
+      period: 4.0
+      width: 256
+      height: 256
+      count: "${int(count)}"
+      shape: "${shape}"
+      size: "${18 * size}"
+      speed: "${60 * speed}"
+      wind: "${wind}"
+      sway: "${16 * sway}"
+      tilt: "${35 * min(sway, 1.5)}"
+      spin: "${60 * spin}"
+      flip_rate: "${0.45 * flip}"
+      color_var: "${variety}"
+      edge: 16

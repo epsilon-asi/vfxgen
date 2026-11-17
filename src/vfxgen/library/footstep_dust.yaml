@@ -1,0 +1,38 @@
+vfxgen: 1
+name: footstep_dust
+description: "Footstep dust: a small, quick scuff of dust puffs and a couple of grains at the foot. Pivot on the ground under the foot; flip x for the other direction."
+size: [128, 96]
+fps: 24
+duration: 0.45
+loop: false
+blend: alpha
+pivot: {px: [64, 72]}
+anchors: {ground: [64, 72]}
+events:
+  - {name: footstep, t: 0.0}
+vars:
+  colors: {default: dust, doc: dust colour ramp (shadow -> lit)}
+  size: {default: 1.0, min: 0.4, max: 2, doc: puff size multiplier}
+  density: {default: 1.0, min: 0, max: 3, doc: dust opacity multiplier}
+  direction: {default: 0.35, min: 0, max: 1, doc: "share of the dust kicked to +x (0.5 = both sides; 0.35 = mostly backwards when walking to +x)"}
+  pebbles: {default: 3, min: 0, max: 12, doc: grains thrown up}
+channels:
+  smoke: {kind: smoke, palette: "${colors}", density: 6.0, shadow: 0.9, ambient: 0.25, relief: 1.6,
+          height_gain: 0.3, size_ref: 128}
+layers:
+  - id: scuff
+    effect: smoke_burst
+    at: [64, 72]
+    anchor: origin
+    params: {duration: 0.45, mode: burst, count: 8, spread: "${150 * size}", spread_start: 2, drag: 7,
+             lateral_min: 0.4, forward: "${direction}", lift: "${35 * size}", rise: "${6 * size}", ground: true,
+             extent: "${44 * size}", radius_start: "${3.5 * size}", radius_end: "${9 * size}", radius_var: 0.25,
+             life_min: 0.32, life_max: 0.42, stagger: 0.02, fade_in: 0.05, fade_out: 0.3,
+             density: "${0.22 * density}", billow: 0.8, wisp_start: 0.15, wispiness: 0.5, grain: 4}
+  - id: pebbles
+    effect: pebbles
+    at: [64, 72]
+    anchor: {px: [0, 0]}
+    params: {duration: 0.4, count: "${int(pebbles)}", speed_x: "${50 * size}", speed_min: "${60 * size}",
+             speed_max: "${140 * size}", gravity: 1400, size_min: 0.6, size_max: 1.0,
+             brightness: "${2.5 * density}", visible: 0.3}

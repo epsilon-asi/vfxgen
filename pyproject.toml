@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "vfxgen"
+version = "1.1.0"
+description = "Procedural VFX sprite generator: compose transparent 2D sprite animations from YAML scenes."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "numpy>=1.26",
+    "pillow>=10.0",
+    "pydantic>=2.6",
+    "ruamel.yaml>=0.18",
+]
+
+[project.optional-dependencies]
+watch = ["watchfiles>=0.21"]          # only for `vfxgen watch`
+
+[dependency-groups]
+dev = ["pytest>=8", "pytest-xdist>=3.5", "watchfiles>=0.21"]
+
+[project.scripts]
+vfxgen = "vfxgen.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+vfxgen = ["library/*.yaml", "library/assets/*", "py.typed"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = ["slow: full-quality renders (deselected by default; run with -m slow)"]
+addopts = "-m 'not slow' -q"

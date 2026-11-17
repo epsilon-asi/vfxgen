@@ -1,0 +1,40 @@
+vfxgen: 1
+name: water_tile
+description: Seamless water tile - a rippling glossy water body with a moving caustic light network (tiles in space and loops in time).
+size: [256, 256]
+fps: 16
+duration: 4.0
+loop: true
+tile: true
+blend: alpha
+pivot: top_left
+vars:
+  colors: {default: water, doc: water body colour ramp (deep -> lit)}
+  caustic_palette: {default: caustics, doc: colour ramp of the caustic light (faint -> hot)}
+  caustics: {default: 1.0, min: 0, max: 3, doc: caustic light intensity (0 = none)}
+  caustic_cells: {default: 5, min: 1, max: 12, doc: caustic cells across the tile (whole number)}
+  line_width: {default: 1.0, min: 0.3, max: 3, doc: caustic line width multiplier}
+  ripple: {default: 1.0, min: 0, max: 3, doc: ripple strength of the water surface}
+  gloss: {default: 1.0, min: 0, max: 3, doc: specular highlight strength}
+  opacity: {default: 1.0, min: 0, max: 3, doc: water body opacity (0 = caustics only)}
+  flow: {default: 1, min: -4, max: 4, doc: tiles drifted sideways per loop (whole number)}
+channels:
+  water: {kind: volume, palette: "${colors}", density: 1.8, bump: 9, soft: 1.2, shadow: 0.0, wrap: 0.6,
+          spec: "${0.7 * gloss}", spec_power: 28, size_ref: 256}
+  light: {kind: light, palette: "${caustic_palette}", blend: add, bloom: [[1, 0.3], [4, 0.2]], exposure: 1.0, alpha_gamma: 0.9}
+layers:
+  - id: water
+    effect: water_surface
+    at: [0, 0]
+    anchor: {px: [0, 0]}
+    channels: {volume: water, light: light}
+    params:
+      width: 256
+      height: 256
+      period: 4.0
+      cells: "${int(caustic_cells)}"
+      caustics: "${caustics}"
+      sharpness: "${0.09 * line_width}"
+      ripple: "${0.35 * ripple}"
+      depth: "${1.3 * opacity}"
+      flow: "${int(flow)}"

@@ -1,0 +1,70 @@
+vfxgen: 1
+name: hit_impact
+description: Comic hit - white-hot spiky star burst, radial speed lines, thin ring and chunky sparks.
+size: [256, 256]
+fps: 24
+duration: "${duration}"
+vars:
+  colors: {default: impact, doc: main colour ramp}
+  duration: {default: 0.334, min: 0.1, max: 2, doc: seconds the hit lasts (sets how far sparks fly)}
+  star_points: {default: 9, min: 3, max: 32, doc: points on the star burst}
+  star_size: {default: 1.0, min: 0.2, max: 1.48, doc: star radius multiplier}
+  spikiness: {default: 1.0, min: 0, max: 1.5, doc: "notch depth (0 = disc, 1 = default, 1.5 = needle-sharp)"}
+  speed_lines: {default: 16, min: 0, max: 80, doc: number of radial speed lines}
+  sparks: {default: 10, min: 0, max: 80, doc: number of chunky sparks}
+  spark_size: {default: 1.0, min: 0.2, max: 3, doc: spark thickness/length multiplier}
+  ring: {default: true, doc: draw the expanding ring}
+  glow: {default: 1.0, min: 0, max: 4, doc: overall light exposure}
+channels:
+  light: {kind: light, palette: "${colors}", bloom: [[1, 0.35], [4, 0.3], [12, 0.22]],
+          exposure: "${1.15 * glow}", alpha_gamma: 0.85}
+layers:
+  - id: star
+    effect: star_burst
+    at: [128, 128]
+    anchor: {px: [0, 0]}
+    params: {duration: "${duration}", points: "${star_points}", radius: "${min(62 * star_size, 92)}",
+             spikiness: "${spikiness}"}
+  - id: ring
+    effect: shockwave
+    enabled: "${ring}"
+    at: [128, 128]
+    anchor: {px: [0, 0]}
+    params:
+      duration: "${0.6 * duration}"
+      radius_start: "${0.5 * min(62 * star_size, 92)}"
+      radius_end: "${1.4 * min(62 * star_size, 92)}"
+      expand_time: "${0.25 * duration}"
+      width_start: 0.9
+      width_end: 1.9
+      brightness: 0.75
+      fade_time: "${0.4 * duration}"
+  - id: lines
+    effect: speed_lines
+    at: [128, 128]
+    anchor: {px: [0, 0]}
+    params: {duration: "${duration}", count: "${speed_lines}", radius: "${min(62 * star_size, 92)}"}
+  - id: sparks
+    effect: burst
+    at: [128, 128]
+    anchor: {px: [0, 0]}
+    params:
+      duration: "${duration}"
+      count: "${sparks}"
+      shape: circle
+      radius: "${0.3 * min(62 * star_size, 92)}"
+      direction: radial
+      speed_min: 320
+      speed_max: 540
+      drag: 4.5
+      gravity: 500
+      life_min: "${0.95 * duration}"
+      life_max: "${0.95 * duration}"
+      style: streak
+      tail: "${0.06 * spark_size}"
+      size: "${1.9 * spark_size}"
+      brightness: 2.4
+      brightness_var: 0
+      fade_in: 0
+      fade_out: 1.1
+      extent: 120

@@ -1,0 +1,36 @@
+vfxgen: 1
+name: sparkle
+description: Cluster of twinkling 4-point star glints appearing at staggered times, with tiny twinkling specks.
+size: [256, 256]
+fps: 16
+duration: 2.0
+loop: true
+vars:
+  colors: {default: frost, doc: main colour ramp}
+  intensity: {default: 1.0, min: 0, max: 4, doc: overall brightness (exposure)}
+  glints: {default: 14, min: 0, max: 200, doc: total number of star glints}
+  big: {default: 4, min: 0, max: 50, doc: how many of them are large hero glints}
+  spread: {default: 1.0, min: 0.1, max: 1.22, doc: cluster radius multiplier}
+  size: {default: 1.0, min: 0.2, max: 1.5, doc: glint size multiplier}
+  duration: {default: 1.0, min: 0.1, max: 3, doc: how long each glint stays lit (fraction-of-loop multiplier)}
+  spin: {default: 1.0, min: -4, max: 4, doc: how much each glint rotates while lit}
+  diagonals: {default: true, doc: add the short diagonal rays}
+  dust: {default: 24, min: 0, max: 400, doc: number of tiny twinkling specks}
+  glow: {default: 1.0, min: 0, max: 3, doc: bloom strength}
+channels:
+  light: {kind: light, palette: "${colors}", exposure: "${intensity}",
+          bloom: [[1.2, "${0.5 * glow}"], [4, "${0.4 * glow}"], [10, "${0.3 * glow}"]], alpha_gamma: 0.85}
+layers:
+  - id: glints
+    effect: glints
+    at: [128, 128]
+    anchor: {px: [0, 0]}
+    params: {period: 2.0, mode: field, count: "${glints}", big: "${big}", spread: "${min(82 * spread, 100)}",
+             size: "${size}", lit: "${duration}", spin: "${spin}", diagonals: "${diagonals}"}
+  - id: specks
+    effect: particles
+    at: [128, 128]
+    anchor: {px: [0, 0]}
+    params: {period: 2.0, count: "${dust}", shape: disk, radius: "${70 * spread}", speed_min: 0, speed_max: 0,
+             laps_min: 1, laps_max: 1, style: dot, size: 0.9, brightness: 0.7, brightness_var: 0,
+             fade_in: 0, fade_out: 0, twinkle: 1.0, twinkle_rate: 2, extent: 120}

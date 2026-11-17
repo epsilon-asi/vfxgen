@@ -1,0 +1,43 @@
+vfxgen: 1
+name: shard_burst
+description: "Crystal shard burst: textured ice shards fly out pointing along their flight, slow down, tumble and shrink, with a cold flash, ring and glints."
+size: [320, 320]
+fps: 24
+duration: 0.9
+loop: false
+blend: alpha
+pivot: center
+vars:
+  colors: {default: frost, doc: "flash / ring / glint colour ramp"}
+  image: {default: shard.png, doc: "shard image (PNG with alpha)"}
+  shards: {default: 22, min: 1, max: 120, doc: number of shards}
+  shard_size: {default: 22, min: 6, max: 48, doc: shard length (px)}
+  power: {default: 1.0, min: 0.2, max: 1.4, doc: launch speed multiplier}
+  gravity: {default: 260, min: 0, max: 1200, doc: gravity on the shards (px/s²)}
+  flash: {default: 1.0, min: 0, max: 3, doc: flash and ring brightness}
+events:
+  - {name: burst, t: 0.0}
+channels:
+  solid: {kind: solid}
+  light: {kind: light, palette: "${colors}", bloom: [[1.5, 0.45], [5, 0.4], [12, 0.25]], exposure: 1.0, alpha_gamma: 0.85}
+layers:
+  - id: flash
+    effect: flash
+    params: {duration: 0.35, radius: 10, grow: 70, brightness: "${2.4 * flash}", decay: 0.05, afterglow_radius: 26,
+             afterglow_brightness: "${0.5 * flash}", afterglow_decay: 0.1}
+  - id: ring
+    effect: shockwave
+    params: {duration: 0.4, radius_start: 10, radius_end: 110, expand_time: 0.09, width_start: 3, width_end: 1.5,
+             brightness: "${0.9 * flash}", fade_time: 0.12, breakup: 0.4}
+  - id: shards
+    effect: texture_burst
+    params: {duration: 0.9, image: "${image}", count: "${shards}", size: "${shard_size}", size_var: 0.35,
+             direction: radial, shape: circle, radius: 6, spread: 360, speed_min: "${200 * power}",
+             speed_max: "${460 * power}", gravity: "${gravity}", drag: 2.6, life_min: 0.5, life_max: 0.8,
+             stagger: 0.02, orient: velocity, scale_start: 1.0, scale_end: 0.5, fade_in: 0.0, fade_out: 0.3,
+             glint: 0.8, extent: 150}
+  - id: glints
+    effect: burst
+    params: {duration: 0.7, count: 16, shape: circle, radius: 10, direction: radial, speed_min: 60, speed_max: 200,
+             drag: 2.5, life_min: 0.25, life_max: 0.5, stagger: 0.1, style: glint, size: 1.0, brightness: 2.0,
+             fade_in: 0.3, fade_out: 1.5, extent: 150}

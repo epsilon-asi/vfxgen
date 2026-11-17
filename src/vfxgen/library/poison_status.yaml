@@ -1,0 +1,56 @@
+vfxgen: 1
+name: poison_status
+description: "Poisoned status overlay (loop, no sprite): green gas seeping up from the body, popping bubbles, toxic drips falling off and glowing motes. Pivot at the character's feet (sized for a ~128 px tall character)."
+size: [176, 224]
+fps: 16
+duration: 2.0
+loop: true
+blend: alpha
+pivot: {px: [88, 208]}
+anchors: {feet: [88, 208], body: [88, 144]}
+vars:
+  colors: {default: toxic, doc: "emissive colour ramp (bubbles, motes, drip glow)"}
+  gas_palette: {default: poison_gas, doc: gas colour ramp (shadow -> lit)}
+  drip_color: {default: "#6fd64a", doc: colour of the dripping drops}
+  body_height: {default: 1.0, min: 0.5, max: 1.3, doc: character height multiplier (128 px = 1)}
+  gas: {default: 1.0, min: 0, max: 3, doc: gas density (0 = off)}
+  bubbles: {default: 7, min: 0, max: 30, doc: number of popping bubbles}
+  drips: {default: 4, min: 0, max: 20, doc: number of drips}
+  motes: {default: 14, min: 0, max: 100, doc: number of glowing motes}
+channels:
+  gas: {kind: smoke, palette: "${gas_palette}", density: 4.0, shadow: 0.7, ambient: 0.3, relief: 1.0,
+        height_gain: 0.8, size_ref: 224}
+  solid: {kind: solid}
+  light: {kind: light, palette: "${colors}", bloom: [[1.5, 0.4], [5, 0.35]], exposure: 1.0, alpha_gamma: 0.85}
+layers:
+  - id: gas
+    effect: smoke_puffs
+    at: [88, "${208 - 40 * body_height}"]
+    anchor: {px: [0, 0]}
+    channels: {smoke: gas}
+    enabled: "${gas > 0}"
+    params: {mode: column, period: 2.0, count: 16, laps: 1, rise: "${110 * body_height}", spread_start: "${18 * body_height}",
+             spread: 10, spawn_y: "${22 * body_height}", sway: 6, drift: 4, radius_start: 9, radius_end: 24,
+             radius_var: 0.25, density: "${0.1 * gas}", billow: 0.6, wisp_start: 0.12, wispiness: 0.35,
+             fade_in: 0.25, fade_out: 0.4, grain: 3}
+  - id: bubbles
+    effect: bubbles
+    at: [88, "${208 - 62 * body_height}"]
+    anchor: {px: [0, 0]}
+    params: {period: 2.0, count: "${int(bubbles)}", laps: 1, spread_x: "${16 * body_height}", spread_y: "${22 * body_height}",
+             rise: 22, radius_min: 2.5, radius_max: 5.5, width: 0.6, brightness: 0.6, pop_brightness: 0.7}
+  - id: drips
+    effect: glyph
+    at: [88, "${208 - 70 * body_height}"]
+    anchor: {px: [0, 0]}
+    params: {period: 2.0, symbol: drop, count: "${int(drips)}", laps: 1, phases: random, spread_x: "${22 * body_height}",
+             spread_y: "${26 * body_height}", rise: -46, accel: 2.2, drift: 0, drift_var: 0, sway: 0, size_start: 9,
+             size_end: 8, size_var: 0.25, tilt: 0, wobble: 0, fade_in: 0.12, fade_out: 0.25, outline: 0.9, glow: 0.35,
+             glyph_palette: "${drip_color}"}
+  - id: motes
+    effect: particles
+    at: [88, "${208 - 50 * body_height}"]
+    anchor: {px: [0, 0]}
+    params: {period: 2.0, count: "${int(motes)}", shape: box, radius: "${24 * body_height}", radius_y: "${40 * body_height}",
+             angle: -90, spread: 20, speed_min: 12, speed_max: 30, laps_min: 1, laps_max: 2, sway: 4, sway_freq: 1,
+             style: dot, size: 1.0, brightness: 2.0, halo: 0.15, fade_in: 0.4, fade_out: 1.2, extent: 120}

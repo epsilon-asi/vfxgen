@@ -1,0 +1,90 @@
+vfxgen: 1
+name: chain_lightning
+description: "Chain lightning jumping between three charged nodes: crackling jagged arcs with forks, flaring contact points and small electric sparks."
+size: [384, 256]
+fps: 24
+duration: 1.0
+loop: true
+blend: additive
+pivot: center
+vars:
+  colors: {default: electric, doc: main colour ramp}
+  roughness: {default: 0.24, min: 0, max: 0.6, doc: jaggedness of the arcs}
+  branches: {default: 3, min: 0, max: 10, doc: forks per arc}
+  strands: {default: 2, min: 1, max: 5, doc: simultaneous strands per link}
+  tick_rate: {default: 16, min: 4, max: 30, doc: re-jag changes per second}
+  bob: {default: 1.0, min: 0, max: 3, doc: how much the nodes drift (px multiplier)}
+  crackle: {default: 1.0, min: 0, max: 3, doc: brightness of the small arcs around each node (0 = off)}
+  glow: {default: 1.0, min: 0, max: 4, doc: light exposure}
+channels:
+  light: {kind: light, palette: "${colors}", bloom: [[2, 0.6], [7, 0.6], [22, 0.45]],
+          exposure: "${glow}", alpha_gamma: 0.85}
+defs:
+  node: &node {period: 1.0, radius: 4, brightness: 1.6, halo_radius: 13, halo_brightness: 0.45,
+               flicker: 0.35, flicker_rate: 16}
+layers:
+  - id: n1
+    effect: glow
+    at: [62, 150]
+    offset: "${[4 * bob * sin(tau * t), 6 * bob * cos(tau * t)]}"
+    params: *node
+  - id: n2
+    effect: glow
+    at: [192, 92]
+    offset: "${[-5 * bob * sin(tau * t), 5 * bob * sin(2 * tau * t)]}"
+    params: *node
+  - id: n3
+    effect: glow
+    at: [322, 162]
+    offset: "${[5 * bob * cos(tau * t), -6 * bob * sin(tau * t)]}"
+    params: *node
+  - id: link1
+    effect: chain
+    at: [0, 0]
+    anchor: {px: [0, 0]}
+    targets: {a: {layer: n1}, b: {layer: n2}}
+    params: &link
+      period: 1.0
+      style: lightning
+      ax: 30
+      ay: 30
+      bx: 354
+      by: 226
+      margin: 0
+      width: 1.5
+      brightness: 1.2
+      glow: 0.3
+      glow_width: 6
+      roughness: "${roughness}"
+      tick_rate: "${tick_rate}"
+      strands: "${int(strands)}"
+      branches: "${int(branches)}"
+      branch_length: 0.22
+      flicker: 0.4
+      flare: 0.8
+      flare_radius: 6
+  - id: link2
+    effect: chain
+    at: [0, 0]
+    anchor: {px: [0, 0]}
+    targets: {a: {layer: n2}, b: {layer: n3}}
+    seed: 17
+    params: *link
+  - id: crackle
+    effect: arc_field
+    enabled: "${crackle > 0}"
+    attach: {layer: n1}
+    scale: 0.32
+    params: {period: 1.0, arcs: 14, brightness: "${crackle}", micro_arcs: 2}
+  - id: crackle2
+    effect: arc_field
+    enabled: "${crackle > 0}"
+    attach: {layer: n2}
+    scale: 0.32
+    params: {period: 1.0, arcs: 14, brightness: "${crackle}", micro_arcs: 2}
+  - id: crackle3
+    effect: arc_field
+    enabled: "${crackle > 0}"
+    attach: {layer: n3}
+    scale: 0.32
+    params: {period: 1.0, arcs: 14, brightness: "${crackle}", micro_arcs: 2}

@@ -1,0 +1,39 @@
+vfxgen: 1
+name: fog_tile
+description: Seamless tile of soft fog banks drifting sideways with finer, faster wisps (tiles in space and loops in time).
+size: [256, 256]
+fps: 16
+duration: 4.0
+loop: true
+tile: true
+blend: alpha
+pivot: top_left
+vars:
+  colors: {default: fog, doc: fog colour ramp (shadow -> lit)}
+  density: {default: 1.0, min: 0, max: 4, doc: fog opacity multiplier}
+  coverage: {default: 0.55, min: 0, max: 1, doc: how much of the tile is covered by fog}
+  softness: {default: 1.0, min: 0.2, max: 3, doc: softness of the bank edges}
+  banks: {default: 3, min: 1, max: 8, doc: fog banks across the tile (whole number)}
+  drift: {default: 1, min: -4, max: 4, doc: tiles drifted sideways per loop (whole number; negative = to the left)}
+  wisps: {default: 1.0, min: 0, max: 2, doc: amount of the finer wisp layer}
+  swirl: {default: 1.0, min: 0, max: 3, doc: how much the banks curl (domain warp)}
+  relief: {default: 1.0, min: 0, max: 3, doc: strength of the soft volume lighting (0 = flat)}
+channels:
+  smoke: {kind: smoke, palette: "${colors}", density: "${1.6 * density}", shadow: 0.25, relief: "${0.25 * relief}",
+          ambient: 0.65, height_gain: 0.5, size_ref: 256}
+layers:
+  - id: fog
+    effect: fog_field
+    at: [0, 0]
+    anchor: {px: [0, 0]}
+    params:
+      width: 256
+      height: 256
+      period: 4.0
+      cells: "${int(banks)}"
+      coverage: "${coverage}"
+      softness: "${0.8 * softness}"
+      drift: "${int(drift)}"
+      wisp_drift: "${2 * int(drift) if int(drift) != 0 else 1}"
+      wisps: "${0.45 * wisps}"
+      warp: "${0.35 * swirl}"

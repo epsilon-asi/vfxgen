@@ -1,0 +1,64 @@
+vfxgen: 1
+name: fireball
+description: "Flying fireball: turbulent hot head, flame trail breaking into wisps and embers. Faces +x; rotate to aim."
+size: [384, 256]
+fps: 20
+duration: 1.0
+loop: true
+anchors: {head: [268.8, 128], tail: [58.8, 128]}
+vars:
+  colors: {default: fire, doc: main colour ramp}
+  head_size: {default: 1.0, min: 0.3, max: 2, doc: radius multiplier of the hot head}
+  trail_length: {default: 1.0, min: 0.2, max: 1.1, doc: flame trail length multiplier}
+  trail_width: {default: 1.0, min: 0.3, max: 2, doc: flame trail thickness multiplier}
+  turbulence: {default: 1.0, min: 0, max: 3, doc: "noise strength: wobble, tongues and wisp break-up"}
+  speed: {default: 1, min: 1, max: 6, doc: trail streaming speed in noise periods per loop (whole number keeps the loop seamless)}
+  intensity: {default: 1.0, min: 0, max: 4, doc: brightness multiplier}
+  embers: {default: 40, min: 0, max: 200, doc: number of embers shed from the head (0 = off)}
+  glow: {default: 1.0, min: 0, max: 4, doc: bloom / halo strength}
+channels:
+  light: {kind: light, palette: "${colors}", exposure: 0.95, alpha_gamma: 0.6,
+          bloom: [[1.5, "${0.25 * glow}"], [6, "${0.25 * glow}"], [18, "${0.2 * glow}"]]}
+layers:
+  - id: trail
+    effect: flame_trail
+    at: [268.8, 128]
+    anchor: head
+    params:
+      head_radius: "${26 * head_size}"
+      trail_length: "${210 * trail_length}"
+      trail_width: "${trail_width}"
+      turbulence: "${turbulence}"
+      speed: "${int(round(speed))}"
+      intensity: "${intensity}"
+  - id: core
+    effect: glow
+    at: [270.8, 128]
+    params: {radius: "${11.7 * head_size}", brightness: "${1.4 * intensity}",
+             halo_radius: "${41.6 * head_size}", halo_brightness: "${0.25 * intensity * glow}"}
+  - id: embers
+    effect: particles
+    at: [258.8, 128]
+    anchor: {px: [0, 0]}
+    params:
+      count: "${int(embers)}"
+      period: 1.0
+      shape: box
+      radius: 2
+      radius_y: "${18 * head_size}"
+      angle: 180
+      spread: 32
+      speed_min: "${126 * int(round(speed)) * trail_length}"
+      speed_max: "${229 * int(round(speed)) * trail_length}"
+      laps_min: "${int(round(speed))}"
+      laps_max: "${2 * int(round(speed))}"
+      sway: 4
+      sway_freq: 2
+      style: streak
+      tail: 0.015
+      size: 0.9
+      brightness: 1.8
+      brightness_var: 0.38
+      fade_in: 0.25
+      fade_out: 0.8
+      extent: 260

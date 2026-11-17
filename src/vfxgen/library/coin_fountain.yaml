@@ -1,0 +1,52 @@
+vfxgen: 1
+name: coin_fountain
+description: "Loot fountain: gold coins burst up from a chest / enemy, flip and glint in the air, bounce on the ground and fade, with a golden pop."
+size: [384, 288]
+fps: 24
+duration: 2.0
+loop: false
+blend: alpha
+pivot: {px: [192, 250]}
+anchors: {spawn: [192, 250]}
+vars:
+  colors: {default: holy, doc: "glow / glint colour ramp"}
+  image: {default: coin.png, doc: "coin image (PNG with alpha)"}
+  coins: {default: 26, min: 1, max: 120, doc: number of coins}
+  coin_size: {default: 15, min: 4, max: 40, doc: coin height (px)}
+  power: {default: 1.0, min: 0.3, max: 1.3, doc: launch speed multiplier}
+  spread: {default: 50, min: 0, max: 120, doc: fountain cone width (deg)}
+  bounce: {default: 0.45, min: 0, max: 0.8, doc: how much coins bounce on the ground}
+  glint: {default: 1.4, min: 0, max: 4, doc: glint brightness on the coins}
+  flash: {default: 1.0, min: 0, max: 3, doc: brightness of the pop at the spawn point}
+events:
+  - {name: burst, t: 0.0, data: {coins: "${coins}"}}
+  - {name: first_land, t: 0.55}
+  - {name: settle, t: 1.5}
+track:
+  - {name: spawn, layer: coins, anchor: {px: [0, 0]}}
+channels:
+  solid: {kind: solid}
+  light: {kind: light, palette: "${colors}", bloom: [[1.5, 0.45], [5, 0.4], [12, 0.2]], exposure: 1.0, alpha_gamma: 0.85}
+layers:
+  - id: pop
+    effect: flash
+    at: [192, 246]
+    anchor: {px: [0, 0]}
+    params: {duration: 0.4, radius: 8, grow: 60, brightness: "${2.0 * flash}", decay: 0.06, afterglow_radius: 22,
+             afterglow_brightness: "${0.5 * flash}", afterglow_decay: 0.12}
+  - id: sparkle
+    effect: burst
+    at: [192, 246]
+    anchor: {px: [0, 0]}
+    params: {duration: 0.8, count: 18, angle: -90, spread: 80, speed_min: 80, speed_max: 220, gravity: 300,
+             drag: 2.0, life_min: 0.3, life_max: 0.6, style: glint, size: 1.0, brightness: 2.0, fade_in: 0.1,
+             fade_out: 1.2, extent: 180}
+  - id: coins
+    effect: texture_burst
+    at: [192, 250]
+    anchor: {px: [0, 0]}
+    params: {duration: 2.0, image: "${image}", count: "${coins}", size: "${coin_size}", size_var: 0.12,
+             angle: -90, spread: "${spread}", speed_min: "${330 * power}", speed_max: "${470 * power}",
+             gravity: 900, drag: 0.3, life_min: 1.4, life_max: 1.8, stagger: 0.18, floor: 0, bounce: "${bounce}",
+             friction: 0.55, spin: 40, spin_var: 0.8, flip: 2.5, fade_in: 0.02, fade_out: 0.18,
+             glint: "${glint}", extent: 186}

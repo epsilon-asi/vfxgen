@@ -1,0 +1,62 @@
+vfxgen: 1
+name: double_jump
+description: "Double jump: a burst of air under the feet - two squashed shock rings, puffs of air blown down and out, and feathery wisps that drift down. Pivot on the feet."
+size: [192, 176]
+fps: 24
+duration: 0.7
+loop: false
+blend: alpha
+pivot: {px: [96, 72]}
+anchors: {feet: [96, 72]}
+events:
+  - {name: jump, t: 0.0}
+vars:
+  colors: {default: wind, doc: "main colour ramp (rings, feathers)"}
+  puff_palette: {default: steam, doc: air puff colours (shadow -> lit)}
+  radius: {default: 1.0, min: 0.4, max: 1.4, doc: ring size multiplier}
+  feathers: {default: 12, min: 0, max: 50, doc: feathery wisps drifting down}
+  puffs: {default: 1.0, min: 0, max: 3, doc: "air puff density (0 = off)"}
+  brightness: {default: 1.0, min: 0, max: 3, doc: ring and feather brightness}
+channels:
+  air: {kind: smoke, palette: "${puff_palette}", density: 0.9, shadow: 0.3, size_ref: 192}
+  light: {kind: light, palette: "${colors}", bloom: [[1.5, 0.45], [5, 0.4], [14, 0.3]], exposure: 1.1,
+          alpha_gamma: 0.85}
+layers:
+  - id: puffs
+    effect: smoke_burst
+    enabled: "${puffs > 0}"
+    at: [96, 82]
+    anchor: origin
+    channels: {smoke: air}
+    params: {duration: 0.65, mode: ring, count: 14, spread: "${230 * radius}", spread_start: 6, squash: 0.35,
+             drag: 6, rise: -14, ground: false, extent: 0, radius_start: 5, radius_end: 13, radius_var: 0.3,
+             life_min: 0.4, life_max: 0.6, stagger: 0.03, fade_in: 0.05, fade_out: 0.3,
+             density: "${0.22 * puffs}", billow: 0.7, wisp_start: 0.2, wispiness: 0.7, grain: 5}
+  - id: ring
+    effect: shockwave
+    at: [96, 80]
+    anchor: {px: [0, 0]}
+    params: {duration: 0.35, radius_start: 6, radius_end: "${54 * radius}", expand_time: 0.08, width_start: 2.6,
+             width_end: 1.2, brightness: "${1.0 * brightness}", fade_time: 0.12, squash: 0.3}
+  - id: ring2
+    effect: shockwave
+    at: [96, 92]
+    anchor: {px: [0, 0]}
+    start: 0.06
+    params: {duration: 0.3, radius_start: 4, radius_end: "${36 * radius}", expand_time: 0.08, width_start: 2,
+             width_end: 1, brightness: "${0.7 * brightness}", fade_time: 0.1, squash: 0.3}
+  - id: gust
+    effect: burst
+    at: [96, 78]
+    anchor: {px: [0, 0]}
+    params: {duration: 0.3, count: 10, shape: line, radius: 18, angle: 90, spread: 50, speed_min: 160,
+             speed_max: 280, drag: 6, life_min: 0.12, life_max: 0.22, style: streak, tail: 0.06, size: 0.8,
+             brightness: "${1.0 * brightness}", fade_in: 0, fade_out: 1.2, extent: 90}
+  - id: feathers
+    effect: burst
+    at: [96, 80]
+    anchor: {px: [0, 0]}
+    params: {duration: 0.68, count: "${int(feathers)}", shape: ellipse, radius: 16, radius_y: 5, direction: radial,
+             speed_min: 50, speed_max: 120, drag: 5, gravity: 70, sway: 6, sway_freq: 2.5, life_min: 0.4,
+             life_max: 0.62, stagger: 0.04, style: streak, tail: 0.1, size: 1.0, brightness: "${1.1 * brightness}",
+             fade_in: 0.05, fade_out: 1.0, extent: 90}

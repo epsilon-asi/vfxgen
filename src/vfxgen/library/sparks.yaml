@@ -1,0 +1,57 @@
+vfxgen: 1
+name: sparks
+description: Spark burst - flash, quick shockwave ring and ballistic sparks with drag and gravity.
+size: [256, 256]
+fps: 24
+duration: "${duration}"
+vars:
+  colors: {default: fire, doc: main colour ramp}
+  duration: {default: 0.55, min: 0.2, max: 3, doc: seconds covered by the animation}
+  count: {default: 90, min: 0, max: 600, doc: number of sparks}
+  speed: {default: 1.0, min: 0, max: 3, doc: launch speed multiplier}
+  gravity: {default: 1.0, min: 0, max: 5, doc: gravity multiplier (0 = no fall)}
+  drag: {default: 3.0, min: 0.1, max: 20, doc: air drag (higher = sparks stop sooner)}
+  life: {default: 1.0, min: 0.1, max: 4, doc: spark lifetime multiplier}
+  spark_width: {default: 1.0, min: 0.2, max: 4, doc: spark thickness multiplier}
+  brightness: {default: 1.0, min: 0, max: 4, doc: spark intensity multiplier}
+  flash: {default: true, doc: draw the central flash and afterglow}
+  shockwave: {default: true, doc: draw the expanding ring}
+channels:
+  light: {kind: light, palette: "${colors}", bloom: [[3, 0.6], [10, 0.6], [28, 0.4]], exposure: 1.0,
+          alpha_gamma: 0.85}
+layers:
+  - id: flash
+    effect: flash
+    enabled: "${flash}"
+    at: [128, 128]
+    anchor: {px: [0, 0]}
+    params: {duration: "${min(duration, 0.5)}", radius: 10, grow: 80, brightness: 3.2, decay: 0.05,
+             afterglow_radius: 32, afterglow_brightness: 0.6, afterglow_decay: 0.12}
+  - id: ring
+    effect: shockwave
+    enabled: "${shockwave}"
+    at: [128, 128]
+    anchor: {px: [0, 0]}
+    params: {duration: "${min(duration, 0.5)}", radius_start: 12, radius_end: 104, expand_time: 0.07,
+             width_start: 3.1, width_end: 3.1, brightness: 0.9, fade_time: 0.09}
+  - id: sparks
+    effect: burst
+    at: [128, 128]
+    anchor: {px: [0, 0]}
+    params:
+      duration: "${duration}"
+      count: "${count}"
+      speed_min: "${140 * speed}"
+      speed_max: "${400 * speed}"
+      drag: "${drag}"
+      gravity: "${140 * gravity}"
+      life_min: "${min(0.25 * life, 0.9 * duration)}"
+      life_max: "${min(0.55 * life, 0.9 * duration)}"
+      style: streak
+      tail: 0.07
+      size: "${1.5 * spark_width}"
+      brightness: "${2.3 * brightness}"
+      brightness_var: 0.39
+      fade_in: 0
+      fade_out: 1.4
+      extent: 118

@@ -1,0 +1,61 @@
+vfxgen: 1
+name: debuff_aura
+description: "Debuff / curse aura (loop, no sprite): dark wisps drifting down around the body, purple down-arrows sinking and a murky pool at the feet. Pivot at the character's feet (sized for a ~128 px tall character)."
+size: [176, 224]
+fps: 16
+duration: 2.0
+loop: true
+blend: alpha
+pivot: {px: [88, 200]}
+anchors: {feet: [88, 200]}
+vars:
+  colors: {default: void, doc: "glow colour ramp (motes, arrow glow)"}
+  wisp_palette: {default: "#120818,#2c1240,#5a2c78", doc: dark wisp colour ramp (shadow -> lit)}
+  arrow_color: {default: "#a35cff", doc: colour of the down arrows}
+  body_height: {default: 1.0, min: 0.5, max: 1.2, doc: character height multiplier (128 px = 1)}
+  wisps: {default: 22, min: 0, max: 120, doc: number of dark wisps}
+  darkness: {default: 1.0, min: 0, max: 3, doc: wisp density}
+  arrows: {default: 3, min: 0, max: 12, doc: arrows per loop}
+  motes: {default: 10, min: 0, max: 80, doc: faint glowing motes}
+channels:
+  wisps: {kind: smoke, palette: "${wisp_palette}", density: 1.4, shadow: 0.5, size_ref: 224}
+  solid: {kind: solid}
+  light: {kind: light, palette: "${colors}", bloom: [[1.5, 0.4], [5, 0.35]], exposure: 1.0, alpha_gamma: 0.9}
+layers:
+  - id: haze
+    effect: glow
+    at: [88, "${200 - 60 * body_height}"]
+    anchor: {px: [0, 0]}
+    params: {period: 2.0, radius: 26, brightness: "${0.22 * darkness}", halo_radius: 0, squash: "${1.8 * body_height}",
+             pulse: 0.25, pulse_cycles: 1}
+  - id: pool
+    effect: smoke_puffs
+    at: [88, 196]
+    anchor: {px: [0, 0]}
+    channels: {smoke: wisps}
+    params: {mode: roll, period: 2.0, count: 12, laps: 1, rise: 4, spread: 34, spread_start: 14, squash: 0.28,
+             radius_start: 8, radius_end: 16, density: "${0.18 * darkness}", billow: 0.7, fade_in: 0.3, fade_out: 0.45, grain: 3}
+  - id: wisps
+    effect: particles
+    at: [88, "${200 - 110 * body_height}"]
+    anchor: {px: [0, 0]}
+    channels: {smoke: wisps}
+    params: {period: 2.0, output: smoke, count: "${int(wisps)}", shape: box, radius: 38, radius_y: 18, angle: 90,
+             spread: 20, speed_min: "${35 * body_height}", speed_max: "${60 * body_height}", laps_min: 1, laps_max: 1,
+             sway: 6, sway_freq: 1, curl: 15, curl_scale: 30, style: puff, size: 5, size_end: 12,
+             brightness: "${0.45 * darkness}", brightness_var: 0.3, fade_in: 0.3, fade_out: 1.2, extent: 130}
+  - id: arrows
+    effect: glyph
+    at: [88, "${200 - 105 * body_height}"]
+    anchor: {px: [0, 0]}
+    params: {period: 2.0, symbol: arrow_down, count: "${int(arrows)}", laps: 1, phases: even, spread_x: 30,
+             spread_y: 10, rise: "${-75 * body_height}", accel: 1.2, drift: 0, drift_var: 0, sway: 0,
+             size_start: 16, size_end: 12, size_var: 0.15, tilt: 0, wobble: 0, fade_in: 0.25, fade_out: 0.35,
+             outline: 1.1, glow: 0.5, glyph_palette: "${arrow_color}"}
+  - id: motes
+    effect: particles
+    at: [88, "${200 - 70 * body_height}"]
+    anchor: {px: [0, 0]}
+    params: {period: 2.0, count: "${int(motes)}", shape: box, radius: 34, radius_y: 50, angle: 90, spread: 10,
+             speed_min: 10, speed_max: 25, laps_min: 1, laps_max: 2, style: dot, size: 1.0, brightness: 1.6,
+             fade_in: 0.4, fade_out: 1.2, extent: 130}

@@ -1,0 +1,73 @@
+vfxgen: 1
+name: water_splash
+description: Side-view crown splash - a rising water sheet breaks into fingers and droplets, central Worthington jet, ripples and spray mist.
+size: [320, 320]
+fps: 24
+duration: "${duration}"
+vars:
+  colors: {default: water, doc: main colour ramp - the water body (deep -> lit)}
+  glint_palette: {default: glint, doc: colour of the light glints on drops}
+  mist_palette: {default: steam, doc: spray mist colours (shadow -> lit)}
+  duration: {default: 1.1, min: 0.6, max: 4, doc: seconds covered by the animation}
+  crown_fingers: {default: 40, min: 6, max: 120, doc: fingers around the crown rim (each sheds 1-2 drops)}
+  crown_height: {default: 1.0, min: 0, max: 1.63, doc: crown height multiplier}
+  crown_width: {default: 1.0, min: 0.2, max: 1.6, doc: crown radius multiplier}
+  drop_amount: {default: 1.0, min: 0, max: 3, doc: multiplier on drops shed per finger (0 = none)}
+  spray_drops: {default: 26, min: 0, max: 200, doc: fast small droplets thrown at the impact}
+  jet: {default: true, doc: central Worthington jet with a bead launched off its top}
+  jet_height: {default: 1.0, min: 0.1, max: 1.78, doc: jet height multiplier}
+  ripples: {default: true, doc: surface ripple rings}
+  mist_amount: {default: 1.0, min: 0, max: 3, doc: spray mist density (0 = off)}
+  gravity: {default: 1.0, min: 0.05, max: 4, doc: gravity multiplier for drops}
+  gloss: {default: 1.0, min: 0, max: 3, doc: specular highlight strength}
+  opacity: {default: 1.0, min: 0, max: 3, doc: water body opacity multiplier}
+channels:
+  mist: {kind: smoke, palette: "${mist_palette}", density: 1.0, shadow: 0.0, size_ref: 320}
+  water: {kind: volume, palette: "${colors}", density: "${opacity}", bump: 6, soft: 1, shadow: 0.15, wrap: 0.8,
+          spec: "${gloss}", spec_power: 30, rim: 0.8, size_ref: 320}
+  light: {kind: light, palette: "${glint_palette}", bloom: [[1, 0.4], [3, 0.25]], exposure: 1.2,
+          alpha_gamma: 0.85}
+layers:
+  - id: crown
+    effect: water_crown
+    at: [160, 236.8]
+    anchor: {px: [0, 0]}
+    channels: {volume: water, light: light, smoke: mist}
+    params:
+      duration: "${duration}"
+      fingers: "${crown_fingers}"
+      height: "${min(92 * crown_height, 150)}"
+      width: "${min(crown_width, 1.6)}"
+      drop_amount: "${drop_amount}"
+      spray_drops: "${spray_drops}"
+      gravity: "${1100 * max(gravity, 0.05)}"
+      gloss: "${gloss}"
+      mist_amount: "${mist_amount}"
+  - id: jet
+    effect: water_jet
+    enabled: "${jet}"
+    start: 0.3
+    at: [160, 236.8]
+    anchor: {px: [0, 0]}
+    channels: {volume: water, light: light}
+    params:
+      duration: 0.55
+      height: "${min(105 * jet_height, 186.8)}"
+      bead_speed: "${230 * sqrt(max(jet_height, 0.1))}"
+      gravity: "${1100 * max(gravity, 0.05)}"
+      gloss: "${gloss}"
+  - id: ripple1
+    effect: ripple
+    enabled: "${ripples}"
+    at: [160, 236.8]
+    anchor: {px: [0, 0]}
+    channels: {volume: water}
+    params: {duration: "${duration}", fade_start: 0.55}
+  - id: ripple2
+    effect: ripple
+    enabled: "${ripples}"
+    start: 0.15
+    at: [160, 236.8]
+    anchor: {px: [0, 0]}
+    channels: {volume: water}
+    params: {duration: "${duration - 0.15}", fade_start: "${(0.55 * duration - 0.15) / (duration - 0.15)}"}

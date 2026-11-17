@@ -1,0 +1,64 @@
+vfxgen: 1
+name: frost_shard_launch
+description: "Frost shard cast: a burst of cold mist and frosty launch rings at the muzzle while the ice dart crystallises and shoots to the spawn point, with a spray of ice dust. Faces +x; pivot on the muzzle."
+size: [192, 160]
+fps: 24
+duration: 0.55
+loop: false
+blend: alpha
+pivot: {px: [40, 80]}
+anchors: {muzzle: [40, 80], spawn: [76, 80]}
+events:
+  - {name: spawn_projectile, t: 0.18, data: {offset: [36, 0], effect: frost_shard_travel}}
+vars:
+  colors: {default: frost, doc: main colour ramp (shared by the frost_shard family)}
+  ice_palette: {default: ice, doc: shard facet colours (shadow -> lit)}
+  mist_palette: {default: steam, doc: mist colours (shadow -> lit)}
+  head_size: {default: 1.0, min: 0.5, max: 1.5, doc: shard size multiplier (match travel and impact)}
+  mist: {default: 1.0, min: 0, max: 3, doc: "cold mist density (0 = off)"}
+  dust: {default: 24, min: 0, max: 100, doc: ice dust specks}
+  glow: {default: 1.0, min: 0, max: 3, doc: light exposure}
+channels:
+  mist: {kind: smoke, palette: "${mist_palette}", density: 0.8, shadow: 0.35, size_ref: 192}
+  shards: {kind: solid, palette: "${ice_palette}"}
+  light: {kind: light, palette: "${colors}", bloom: [[1.2, 0.45], [4.5, 0.4], [14, 0.3]],
+          exposure: "${1.1 * glow}", alpha_gamma: 0.9}
+layers:
+  - id: mist
+    effect: frost_mist
+    enabled: "${mist > 0}"
+    at: [52, 80]
+    start: 0.04
+    scale: [1.0, 0.8]
+    params: {duration: 0.5, amount: "${0.6 * mist}", count: 22, radius_start: 4, radius_end: 30, expand_time: 0.12,
+             rise: 6, puff_min: 4, puff_max: 8, density_min: 0.2, density_max: 0.4, noise_scale: 10}
+  - id: flash
+    effect: flash
+    at: [40, 80]
+    anchor: {px: [0, 0]}
+    params: {duration: 0.3, radius: 5, grow: 40, brightness: 2.0, decay: 0.06, afterglow_radius: 14,
+             afterglow_brightness: 0.4, afterglow_decay: 0.1}
+  - id: rings
+    effect: muzzle_ring
+    at: [40, 80]
+    anchor: {px: [0, 0]}
+    start: 0.12
+    params: {duration: 0.34, count: 3, stagger: 0.05, radius_start: 5, radius_end: "${22 * head_size}",
+             squash: 0.32, travel: 50, offset: 8, width: 1.4, brightness: 1.8}
+  - id: shard
+    effect: projectile_core
+    length: 0.22
+    fade: {out: 0.04}
+    channels: {solid: shards}
+    move: {path: {line: [[46, 80], [76, 80]]}, duration: 0.18, ease: in}
+    scale: {keys: [[0, 0.2], [0.14, 1.0, out]]}
+    params: {period: 1.0, style: shard, radius: "${16 * head_size}", thickness: 0.4, core: 0.9, rim: 0.9,
+             halo: 0.22, halo_radius: 1.6, spin: 2, pulse: 0.0, pulse_cycles: 0}
+  - id: dust
+    effect: burst
+    at: [48, 80]
+    anchor: {px: [0, 0]}
+    start: 0.12
+    params: {duration: 0.4, count: "${int(dust)}", angle: 0, spread: 80, speed_min: 120, speed_max: 300,
+             drag: 4, life_min: 0.2, life_max: 0.35, style: glint, size: 0.7, brightness: 1.8, twinkle: 0.5,
+             fade_in: 0, fade_out: 1.2, extent: 130}

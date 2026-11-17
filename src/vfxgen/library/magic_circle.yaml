@@ -1,0 +1,103 @@
+vfxgen: 1
+name: magic_circle
+description: "Summoning circle: counter-rotating rune bands, hexagram, ticks, orbiting sparks; a highlight sweeps around and everything pulses."
+size: [320, 320]
+fps: 16
+duration: 2.0
+loop: true
+vars:
+  colors: {default: arcane, doc: main colour ramp}
+  intensity: {default: 1.0, min: 0, max: 4, doc: overall brightness (exposure)}
+  rotation_speed: {default: 1, min: -4, max: 4, doc: "whole-number band rotation (symmetry steps per loop; negative reverses, 0 = still)"}
+  glyphs: {default: 9, min: 1, max: 40, doc: number of unique runes in the outer band}
+  glyph_repeat: {default: 4, min: 1, max: 12, doc: "times the rune set repeats around the band (total = glyphs * glyph_repeat)"}
+  inner_glyphs: {default: true, doc: draw the small inner rune ring}
+  hexagram: {default: true, doc: "draw the hexagram, tip circles and inner hexagon"}
+  ticks: {default: true, doc: draw the tick / dot scale band}
+  star: {default: true, doc: draw the central 8-point star}
+  sparks: {default: 9, min: 0, max: 100, doc: sparks orbiting outside the circle}
+  inner_sparks: {default: 5, min: 0, max: 100, doc: sparks orbiting inside the hexagram}
+  pulse: {default: 0.12, min: 0, max: 0.9, doc: brightness pulse amplitude}
+  sweep: {default: 1.0, min: 0, max: 3, doc: strength of the highlight sweeping around the circle}
+  haze: {default: 1.0, min: 0, max: 4, doc: faint glow filling the disc}
+  line_width: {default: 1.0, min: 0.2, max: 4, doc: stroke width multiplier}
+  glow: {default: 1.0, min: 0, max: 3, doc: bloom strength}
+channels:
+  light: {kind: light, palette: "${colors}", exposure: "${intensity}",
+          bloom: [[1.2, "${0.5 * glow}"], [4, "${0.45 * glow}"], [12, "${0.4 * glow}"]], alpha_gamma: 0.8}
+layers:
+  # The legacy global multiplier (0.8 + 0.4*sweep*highlight) * pulse applies to every band, rune and
+  # line, but not to the core or the sparks: the mask + opacity anchored on the first layer are
+  # shared by all swept layers.
+  # static rings
+  - {id: ring_out, effect: ring, at: [160, 160],
+     mask: &sweep_mask {type: sweep, turns: 0.5, width: 180, floor: "${0.8 / (0.8 + 0.4 * sweep)}"},
+     opacity: &sweep_gain "${(0.8 + 0.4 * ${sweep}) * (1 + ${pulse} * sin(tau * t / 2))}",
+     params: {period: 2, radius: 138, width: "${0.8 * line_width}", brightness: 1.1}}
+  - {id: ring_out2, effect: ring, at: [160, 160], mask: *sweep_mask, opacity: *sweep_gain,
+     params: {period: 2, radius: 133, width: "${0.62 * line_width}", brightness: 0.7}}
+  - {id: ring_band_o, effect: ring, at: [160, 160], mask: *sweep_mask, opacity: *sweep_gain,
+     params: {period: 2, radius: 116, width: "${0.62 * line_width}", brightness: 0.8}}
+  - {id: ring_band_i, effect: ring, at: [160, 160], mask: *sweep_mask, opacity: *sweep_gain,
+     params: {period: 2, radius: 95, width: "${0.62 * line_width}", brightness: 0.9}}
+  - {id: ring_band_i2, effect: ring, at: [160, 160], mask: *sweep_mask, opacity: *sweep_gain,
+     params: {period: 2, radius: 92, width: "${0.5 * line_width}", brightness: 0.45}}
+  - {id: ring_in, effect: ring, at: [160, 160], mask: *sweep_mask, opacity: *sweep_gain,
+     params: {period: 2, radius: 46, width: "${0.62 * line_width}", brightness: 0.85}}
+  - {id: ring_core, effect: ring, at: [160, 160], mask: *sweep_mask, opacity: *sweep_gain,
+     params: {period: 2, radius: 14, width: "${0.62 * line_width}", brightness: 0.5}}
+  # rotating dashed rings
+  - {id: dashes_in, effect: ring, at: [160, 160], mask: *sweep_mask, opacity: *sweep_gain,
+     params: {period: 2, radius: 41, width: "${0.62 * line_width}", brightness: 0.8, dashes: 12, duty: 0.55,
+              rotation: "${-rotation_speed}"}}
+  - {id: dashes_out, effect: ring, at: [160, 160], mask: *sweep_mask, opacity: *sweep_gain,
+     params: {period: 2, radius: 135.5, width: "${0.31 * line_width}", brightness: 0.55, dashes: 36, duty: 0.4,
+              rotation: "${3 * rotation_speed}"}}
+  # tick / dot scale band
+  - {id: ticks_fine, effect: ticks, at: [160, 160], enabled: "${ticks}", mask: *sweep_mask, opacity: *sweep_gain,
+     params: {period: 2, count: 96, radius_inner: 122, radius_outer: 127, width: "${0.62 * line_width}",
+              brightness: 0.75, rotation: "${4 * rotation_speed}"}}
+  - {id: ticks_major, effect: ticks, at: [160, 160], enabled: "${ticks}", mask: *sweep_mask, opacity: *sweep_gain,
+     params: {period: 2, count: 24, radius_inner: 118, radius_outer: 130, width: "${0.465 * line_width}",
+              brightness: 1.0, rotation: "${rotation_speed}"}}
+  - {id: tick_dots, effect: ticks, at: [160, 160], enabled: "${ticks}", mask: *sweep_mask, opacity: *sweep_gain,
+     params: {period: 2, count: 24, radius_inner: 128.5, radius_outer: 129.5, width: "${0.68 * line_width}",
+              brightness: 0.9, rotation: "${rotation_speed}", offset: 0.5}}
+  # haze filling the disc
+  - {id: haze, effect: glow, at: [160, 160], mask: *sweep_mask, opacity: *sweep_gain,
+     params: {period: 2, radius: 28.3, brightness: "${0.1 * haze}", halo_radius: 72, halo_brightness: "${0.042 * haze}"}}
+  # rune bands
+  - {id: runes, effect: rune_ring, at: [160, 160], mask: *sweep_mask, opacity: *sweep_gain,
+     params: {period: 2, glyphs: "${glyphs}", repeat: "${glyph_repeat}", radius: 105.5, height: 11,
+              line_width: "${0.62 * line_width}", brightness: 1.15, rotation: "${-rotation_speed}",
+              sweep: "${sweep}", sweep_turns: 1}}
+  - {id: runes_inner, effect: rune_ring, at: [160, 160], enabled: "${inner_glyphs}", mask: *sweep_mask,
+     opacity: *sweep_gain,
+     params: {period: 2, glyphs: 3, repeat: 4, radius: 33, height: 7.5, line_width: "${0.527 * line_width}",
+              brightness: 1.0, rotation: "${rotation_speed}", sweep: "${sweep}", sweep_turns: 1}}
+  # hexagram with tip circles, inner hexagon, central star
+  - {id: hexagram, effect: star_shape, at: [160, 160], enabled: "${hexagram}", mask: *sweep_mask, opacity: *sweep_gain,
+     params: {period: 2, points: 6, step: 2, radius: 92, angle: -90, line_width: "${0.651 * line_width}",
+              brightness: 1.15, rotation: "${rotation_speed}", tip_ring_radius: 6.5,
+              tip_ring_width: "${0.62 * line_width}", tip_ring_brightness: 1.0, tip_dot_size: 1.6,
+              tip_dot_brightness: 1.0, sweep: "${sweep}", sweep_turns: 1}}
+  - {id: hexagon, effect: star_shape, at: [160, 160], enabled: "${hexagram}", mask: *sweep_mask, opacity: *sweep_gain,
+     params: {period: 2, points: 6, step: 1, radius: 37.72, angle: 0, line_width: "${0.496 * line_width}",
+              brightness: 0.45, rotation: "${-rotation_speed}", tip_ring_radius: 0, tip_dot_size: 0}}
+  - {id: star, effect: star_shape, at: [160, 160], enabled: "${star}", mask: *sweep_mask, opacity: *sweep_gain,
+     params: {period: 2, points: 8, step: 2, radius: 21, angle: 0, line_width: "${0.62 * line_width}",
+              brightness: 0.85, rotation: "${-rotation_speed}", tip_ring_radius: 0, tip_dot_size: 0}}
+  # unswept: core and sparks
+  - {id: core, effect: glow, at: [160, 160],
+     params: {period: 2, radius: 5, brightness: 1.4, halo_radius: 16, halo_brightness: 0.35,
+              pulse: "${pulse}", pulse_cycles: 1}}
+  - {id: sparks, effect: orbiters, at: [160, 160],
+     params: {period: 2, count: "${sparks}", radius_min: 143, radius_max: 148, squash_min: 1, squash_max: 1,
+              speeds: "1,1,2,-1", spin: 1, trail: 0.5, trail_points: 12, trail_width: 0.25, head_width: 0.9,
+              head_size: 1.3, brightness_min: 0.7, brightness_max: 1.3, trail_brightness: 1.2,
+              head_brightness: 1.2, depth: 0}}
+  - {id: inner_sparks, effect: orbiters, at: [160, 160],
+     params: {period: 2, count: "${inner_sparks}", radius_min: 55, radius_max: 80, squash_min: 1, squash_max: 1,
+              speeds: "-1,-2,1", spin: 1, trail: 0.8, trail_points: 12, trail_width: 0.25, head_width: 0.9,
+              head_size: 1.3, brightness_min: 0.5, brightness_max: 0.9, trail_brightness: 1.2,
+              head_brightness: 1.2, depth: 0}}

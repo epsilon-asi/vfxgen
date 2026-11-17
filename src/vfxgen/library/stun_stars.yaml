@@ -1,0 +1,29 @@
+vfxgen: 1
+name: stun_stars
+description: "Stunned / dizzy status (loop, no sprite): little stars circle over the head on a tilted ring, leaving glowing trails. Pivot at the top of the head (orbit centre is just above it)."
+size: [128, 80]
+fps: 16
+duration: 1.0
+loop: true
+blend: alpha
+pivot: {px: [64, 52]}
+anchors: {head: [64, 52]}
+vars:
+  colors: {default: holy, doc: "trail / glow colour ramp"}
+  star_color: {default: "#ffd84a", doc: star colour}
+  stars: {default: 3, min: 1, max: 8, doc: number of stars}
+  radius: {default: 26, min: 8, max: 40, doc: orbit half-width (px)}
+  size: {default: 11, min: 4, max: 20, doc: star size (px)}
+  speed: {default: 1, min: -3, max: 3, doc: revolutions per loop (whole number; negative = reverse)}
+  trail: {default: 0.8, min: 0, max: 3, doc: trail brightness (0 = off)}
+channels:
+  solid: {kind: solid}
+  light: {kind: light, palette: "${colors}", bloom: [[1.5, 0.45], [5, 0.3]], exposure: 1.0, alpha_gamma: 0.85}
+layers:
+  - id: stars
+    effect: orbit_icons
+    at: [64, 42]
+    anchor: {px: [0, 0]}
+    params: {period: 1.0, symbol: star, count: "${int(stars)}", radius_x: "${radius}", radius_y: "${radius * 0.3}",
+             tilt: -8, laps: "${int(round(speed)) if round(speed) != 0 else 1}", size: "${size}", depth: 0.3, spin: 1,
+             bob: 1.5, trail: "${trail}", trail_length: 1.0, outline: 1.0, glow: 0.5, glyph_palette: "${star_color}"}

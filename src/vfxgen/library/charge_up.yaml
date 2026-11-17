@@ -1,0 +1,56 @@
+vfxgen: 1
+name: charge_up
+description: Energy particles streak inward to a brightening point, ending in a small pop.
+size: [256, 256]
+fps: 20
+duration: 1.35
+loop: false
+vars:
+  colors: {default: arcane, doc: main colour ramp}
+  intensity: {default: 1.0, min: 0, max: 4, doc: overall brightness (exposure)}
+  particles: {default: 64, min: 0, max: 600, doc: number of inward-streaking particles}
+  radius: {default: 1.0, min: 0.2, max: 1.2, doc: how far out particles start (multiplier)}
+  swirl: {default: 1.0, min: -4, max: 4, doc: how much the particles spiral on the way in}
+  trail: {default: 0.45, min: 0, max: 1, doc: trail length of each particle (fraction of its path)}
+  core: {default: 1.0, min: 0, max: 4, doc: brightness of the charging core}
+  converge_rings: {default: 3, min: 0, max: 3, doc: number of faint rings contracting inward}
+  pop_at: {default: 0.72, min: 0.3, max: 0.92, doc: fraction of the animation when it pops}
+  pop: {default: true, doc: end with a pop (false = the charge just fades out)}
+  pop_sparks: {default: 14, min: 0, max: 200, doc: sparks thrown out by the pop}
+  glow: {default: 1.0, min: 0, max: 3, doc: bloom strength}
+channels:
+  light: {kind: light, palette: "${colors}", exposure: "${intensity}",
+          bloom: [[1.2, "${0.5 * glow}"], [4, "${0.5 * glow}"], [12, "${0.45 * glow}"]], alpha_gamma: 0.85}
+layers:
+  - id: charge
+    effect: inflow
+    at: [128, 128]
+    anchor: {px: [0, 0]}
+    params: {duration: 1.35, count: "${particles}", radius_min: "${70 * radius}", radius_max: "${104 * radius}",
+             swirl: "${swirl}", trail: "${trail}", core: "${core}", rings: "${converge_rings}",
+             ring_radius: "${84 * radius}", pop_at: "${pop_at}", pop: "${pop}"}
+  - id: pop_flash
+    effect: flash
+    enabled: "${pop}"
+    at: [128, 128]
+    start: "${pop_at * 1.35}"
+    params: {duration: "${(1 - pop_at) * 1.35}", radius: 6, grow: "${10 / ((1 - pop_at) * 1.35)}",
+             brightness: "${3.0 * core}", decay: "${(1 - pop_at) * 1.35 / 5}", afterglow_radius: 28,
+             afterglow_brightness: "${0.6 * core}", afterglow_decay: "${(1 - pop_at) * 1.35 / 4}"}
+  - id: pop_ring
+    effect: shockwave
+    enabled: "${pop}"
+    at: [128, 128]
+    start: "${pop_at * 1.35}"
+    params: {duration: "${(1 - pop_at) * 1.35}", radius_start: 8, radius_end: 78,
+             expand_time: "${(1 - pop_at) * 1.35 / 4}", width_start: 1.6, width_end: 4.6, brightness: 1.6,
+             fade_time: "${(1 - pop_at) * 1.35 * 0.48}"}
+  - id: pop_sparks
+    effect: burst
+    enabled: "${pop}"
+    at: [128, 128]
+    anchor: {px: [0, 0]}
+    start: "${pop_at * 1.35}"
+    params: {duration: "${(1 - pop_at) * 1.35}", count: "${pop_sparks}", speed_min: 240, speed_max: 560, drag: 8,
+             life_min: "${(1 - pop_at) * 1.35}", life_max: "${(1 - pop_at) * 1.35}", style: streak, size: 0.8,
+             brightness: 1.4, brightness_var: 0, tail: 0.05, fade_in: 0, fade_out: 1.5, extent: 100}

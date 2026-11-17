@@ -1,0 +1,45 @@
+vfxgen: 1
+name: rain
+description: Rain shower - slanted streaks falling over the frame (near drops fast and bright, far ones slow and faint) splashing on a ground line with tiny rings and droplets.
+size: [256, 256]
+fps: 24
+duration: 1.0
+loop: true
+blend: alpha
+pivot: ground
+anchors: {ground: [128, 236]}
+vars:
+  colors: {default: rain, doc: rain colour ramp (faint -> bright)}
+  density: {default: 110, min: 0, max: 400, doc: number of drops}
+  speed: {default: 1.0, min: 0.3, max: 3, doc: fall speed multiplier}
+  wind: {default: 0.15, min: -1, max: 1, doc: slant (sideways px per px of fall; negative = to the left)}
+  length: {default: 1.0, min: 0.2, max: 4, doc: streak length multiplier}
+  thickness: {default: 1.0, min: 0.3, max: 3, doc: streak thickness multiplier}
+  brightness: {default: 1.0, min: 0, max: 4, doc: streak intensity multiplier}
+  depth: {default: 0.6, min: 0, max: 1, doc: "depth spread (far drops slower, thinner, dimmer)"}
+  splashes: {default: 1.0, min: 0, max: 3, doc: splash intensity on the ground line (0 = none)}
+  splash_size: {default: 1.0, min: 0.3, max: 3, doc: splash size multiplier}
+channels:
+  light: {kind: light, palette: "${colors}", bloom: [[1, 0.3], [3, 0.18]], exposure: 1.0, alpha_gamma: 0.9}
+layers:
+  - id: rain
+    effect: rainfall
+    at: [128, 236]
+    anchor: ground
+    params:
+      period: 1.0
+      width: 256
+      height: 236
+      count: "${int(density)}"
+      speed: "${850 * speed}"
+      wind: "${wind}"
+      length: "${0.03 * length}"
+      thickness: "${0.6 * thickness}"
+      brightness: "${0.9 * brightness}"
+      depth: "${depth}"
+      splashes: "${splashes}"
+      splash_size: "${6 * splash_size}"
+      ground_depth: 24
+      edge: 16
+events:
+  - {name: loop_start, t: 0.0, data: {}}

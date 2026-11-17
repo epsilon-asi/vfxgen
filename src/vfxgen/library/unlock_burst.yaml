@@ -1,0 +1,64 @@
+vfxgen: 1
+name: unlock_burst
+description: "Unlock / reward burst: a flash, radial light rays that shoot out and slowly turn, an expanding ring, star glints flying out and twinkling sparkles."
+size: [256, 256]
+fps: 30
+duration: 1.4
+loop: false
+blend: additive
+pivot: center
+vars:
+  colors: {default: holy, doc: main colour ramp}
+  rays: {default: 14, min: 0, max: 48, doc: number of light rays (0 = none)}
+  ray_length: {default: 1.0, min: 0.3, max: 1.1, doc: ray length multiplier}
+  ray_width: {default: 14, min: 2, max: 30, doc: ray angular width (deg)}
+  spin: {default: 18, min: -120, max: 120, doc: ray rotation (deg per second)}
+  stars: {default: 8, min: 0, max: 30, doc: star glints flying out}
+  sparkles: {default: 30, min: 0, max: 200, doc: tiny twinkling sparkles}
+  ring: {default: true, doc: draw the expanding ring}
+  intensity: {default: 1.0, min: 0, max: 3, doc: overall brightness (exposure)}
+channels:
+  rays: {kind: light, palette: "${colors}", exposure: "${intensity}", bloom: [[2, 0.4], [8, 0.35], [20, 0.25]],
+         alpha_gamma: 0.8}
+  light: {kind: light, palette: "${colors}", exposure: "${intensity}", bloom: [[1.2, 0.5], [4, 0.45], [12, 0.3]],
+          alpha_gamma: 0.8}
+events:
+  - {name: unlock, t: 0.0, data: {}}
+layers:
+  - id: rays
+    effect: ray_burst
+    enabled: "${rays > 0}"
+    at: [128, 128]
+    anchor: {px: [0, 0]}
+    channels: {light: rays}
+    params: {duration: 1.4, count: "${max(rays, 1)}", radius: "${108 * ray_length}", width: "${ray_width}",
+             spin: "${spin}", brightness: 1.3, grow: 0.2, inner: 8, fade_start: 0.4}
+  - id: flash
+    effect: flash
+    at: [128, 128]
+    channels: {light: light}
+    params: {duration: 0.5, radius: 8, grow: 60, brightness: 2.8, decay: 0.06, afterglow_radius: 26,
+             afterglow_brightness: 0.7, afterglow_decay: 0.2}
+  - id: ring
+    effect: shockwave
+    enabled: "${ring}"
+    at: [128, 128]
+    channels: {light: light}
+    params: {duration: 0.6, radius_start: 10, radius_end: 96, expand_time: 0.12, width_start: 3, width_end: 1.2,
+             brightness: 1.4, fade_time: 0.18}
+  - id: stars
+    effect: glints
+    at: [128, 128]
+    anchor: {px: [0, 0]}
+    time_mode: once
+    channels: {light: light}
+    params: {period: 0.9, mode: burst, count: "${stars}", spread: 86, size: 0.8, line_width: 0.9, flash: 0.5,
+             sustain: 1.4, fade_from: 0.5, shrink: 0.5, travel: 0.7, spin: 1.0}
+  - id: sparkles
+    effect: burst
+    at: [128, 128]
+    anchor: {px: [0, 0]}
+    channels: {light: light}
+    params: {duration: 1.3, count: "${sparkles}", shape: disk, radius: 30, direction: radial, speed_min: 30,
+             speed_max: 150, drag: 2, stagger: 0.4, life_min: 0.4, life_max: 0.8, style: glint, size: 0.8,
+             brightness: 1.5, twinkle: 0.6, twinkle_rate: 8, fade_in: 0.2, fade_out: 1.3, extent: 115}

@@ -1,0 +1,45 @@
+vfxgen: 1
+name: burn_status
+description: "Burning status overlay (loop, no sprite): small flames flickering on the body, swirling embers and a wisp of smoke. Pivot at the character's feet (sized for a ~128 px tall character)."
+size: [176, 240]
+fps: 16
+duration: 2.0
+loop: true
+blend: alpha
+pivot: {px: [88, 224]}
+anchors: {feet: [88, 224]}
+vars:
+  colors: {default: fire, doc: "flame / ember colour ramp"}
+  smoke_palette: {default: dark_smoke, doc: smoke colour ramp (shadow -> lit)}
+  body_height: {default: 1.0, min: 0.5, max: 1.2, doc: character height multiplier (128 px = 1)}
+  flame_size: {default: 1.0, min: 0.4, max: 2.0, doc: flame size multiplier}
+  embers: {default: 30, min: 0, max: 200, doc: number of embers}
+  smoke: {default: 0.8, min: 0, max: 3, doc: smoke density (0 = off)}
+  intensity: {default: 1.0, min: 0.2, max: 3, doc: flame brightness}
+channels:
+  smoke: {kind: smoke, palette: "${smoke_palette}", density: 1.0, shadow: 0.4, size_ref: 240}
+  light: {kind: light, palette: "${colors}", bloom: [[1.5, 0.5], [5, 0.45], [12, 0.25]], exposure: "${intensity}", alpha_gamma: 0.8}
+layers:
+  - id: smoke
+    effect: smoke_puffs
+    at: [88, "${224 - 118 * body_height}"]
+    anchor: {px: [0, 0]}
+    enabled: "${smoke > 0}"
+    params: {mode: column, period: 2.0, count: 10, laps: 1, rise: 80, spread_start: 8, spread: 8, sway: 6, drift: 6,
+             radius_start: 5, radius_end: 15, density: "${0.12 * smoke}", fade_in: 0.2, fade_out: 0.4, grain: 3}
+  - {id: flame_l, effect: flame, at: [70, "${224 - 70 * body_height}"], anchor: base, scale: "${0.13 * flame_size}",
+     params: {period: 1.0, style: torch, speed: 2, intensity: 0.9}}
+  - {id: flame_r, effect: flame, at: [108, "${224 - 82 * body_height}"], anchor: base, scale: "${0.11 * flame_size}",
+     params: {period: 1.0, style: torch, speed: 2, intensity: 0.9}}
+  - {id: flame_h, effect: flame, at: [92, "${224 - 120 * body_height}"], anchor: base, scale: "${0.15 * flame_size}",
+     params: {period: 1.0, style: fire, speed: 2, intensity: 1.0}}
+  - {id: flame_b, effect: flame, at: [80, "${224 - 30 * body_height}"], anchor: base, scale: "${0.09 * flame_size}",
+     params: {period: 0.5, style: torch, speed: 1, intensity: 0.8}}
+  - id: embers
+    effect: particles
+    at: [88, "${224 - 70 * body_height}"]
+    anchor: {px: [0, 0]}
+    params: {period: 2.0, count: "${int(embers)}", shape: box, radius: 24, radius_y: "${44 * body_height}", angle: -90,
+             spread: 30, speed_min: 25, speed_max: 70, gravity: -30, laps_min: 1, laps_max: 3, sway: 5, sway_freq: 2,
+             curl: 25, curl_scale: 30, style: dot, size: 1.0, brightness: 2.0, halo: 0.12, fade_in: 0.1, fade_out: 1.3,
+             extent: 140}

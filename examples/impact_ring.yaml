@@ -1,0 +1,18 @@
+vfxgen: 1
+name: impact_ring
+description: Ground impact ring with dust, used as a layer by storm_strike.yaml.
+size: [256, 128]
+fps: 24
+duration: 0.8
+anchors: {ground: [128, 96]}
+vars:
+  colors: {default: electric, doc: ring colour}
+layers:
+  - effect: shockwave
+    at: [128, 96]
+    colors: "${colors}"
+    params: {squash: 0.3, radius_end: 110, breakup: 0.5, fade_time: 0.18, duration: 0.6}
+  - effect: dust_puff
+    at: [128, 96]
+    anchor: [0.5, 0.75]
+    scale: 0.6

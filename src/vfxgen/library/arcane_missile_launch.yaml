@@ -1,0 +1,70 @@
+vfxgen: 1
+name: arcane_missile_launch
+description: "Arcane missile cast: a small dashed rune circle flares open edge-on at the muzzle, launch rings pulse forward and the plasma head condenses and shoots to the spawn point amid glints. Faces +x; pivot on the muzzle."
+size: [192, 160]
+fps: 24
+duration: 0.5
+loop: false
+blend: additive
+pivot: {px: [40, 80]}
+anchors: {muzzle: [40, 80], spawn: [74, 80]}
+events:
+  - {name: spawn_projectile, t: 0.18, data: {offset: [34, 0], effect: arcane_missile_travel}}
+vars:
+  colors: {default: arcane, doc: main colour ramp (shared by the arcane_missile family)}
+  head_size: {default: 1.0, min: 0.5, max: 1.5, doc: head size multiplier (match travel and impact)}
+  rune: {default: 1.0, min: 0, max: 3, doc: "rune circle brightness (0 = off)"}
+  glints: {default: 8, min: 0, max: 40, doc: glints flying off the cast}
+  intensity: {default: 1.0, min: 0, max: 3, doc: brightness multiplier}
+channels:
+  light: {kind: light, palette: "${colors}", bloom: [[1.5, 0.5], [5, 0.45], [16, 0.35]],
+          exposure: "${intensity}", alpha_gamma: 0.8}
+layers:
+  - id: rune
+    effect: ring
+    enabled: "${rune > 0}"
+    at: [44, 80]
+    rotate: 90
+    length: 0.42
+    fade: {in: 0.05, out: 0.2}
+    scale: {keys: [[0, 0.3], [0.12, 1.0, out], [0.42, 1.15]]}
+    params: {period: 0.5, radius: 26, width: 1.3, brightness: "${1.6 * rune}", squash: 0.32, dashes: 10,
+             duty: 0.6, rotation: 2}
+  - id: rune_inner
+    effect: ring
+    enabled: "${rune > 0}"
+    at: [44, 80]
+    rotate: 90
+    length: 0.42
+    fade: {in: 0.05, out: 0.2}
+    scale: {keys: [[0, 0.3], [0.12, 1.0, out], [0.42, 1.1]]}
+    params: {period: 0.5, radius: 17, width: 0.9, brightness: "${1.2 * rune}", squash: 0.32, dashes: 6,
+             duty: 0.4, rotation: -2}
+  - id: flash
+    effect: flash
+    at: [42, 80]
+    anchor: {px: [0, 0]}
+    params: {duration: 0.3, radius: 4, grow: 40, brightness: 2.2, decay: 0.06, afterglow_radius: 16,
+             afterglow_brightness: 0.45, afterglow_decay: 0.12}
+  - id: rings
+    effect: muzzle_ring
+    at: [44, 80]
+    anchor: {px: [0, 0]}
+    start: 0.14
+    params: {duration: 0.32, count: 3, stagger: 0.05, radius_start: 6, radius_end: "${22 * head_size}",
+             squash: 0.32, travel: 52, offset: 6, width: 1.4, brightness: 1.6}
+  - id: head
+    effect: projectile_core
+    length: 0.22
+    fade: {out: 0.04}
+    move: {path: {line: [[44, 80], [74, 80]]}, duration: 0.18, ease: in}
+    scale: {keys: [[0, 0.25], [0.14, 1.0, out]]}
+    params: {period: 1.0, style: orb, radius: "${9 * head_size}", stretch: 2.4, brightness: 1.0, core: 1.8,
+             rim: 0.7, turbulence: 0.7, halo: 0.3, halo_radius: 2.4, spin: 3, pulse: 0.12, pulse_cycles: 4}
+  - id: glints
+    effect: glints
+    at: [46, 80]
+    start: 0.12
+    time_mode: once
+    params: {period: 0.36, mode: burst, count: "${int(glints)}", spread: 50, size: 0.45, brightness: 1.2,
+             flash: 1.0, sustain: 1.2}

@@ -1,0 +1,69 @@
+vfxgen: 1
+name: pickup_burst
+description: "Collect / level-up pop: flash, expanding rings, star glints flying out, tiny sparks."
+size: [256, 256]
+fps: 20
+duration: 0.75
+loop: false
+vars:
+  colors: {default: holy, doc: main colour ramp}
+  intensity: {default: 1.0, min: 0, max: 4, doc: overall brightness (exposure)}
+  stars: {default: 7, min: 0, max: 40, doc: number of star glints flying out}
+  star_size: {default: 1.0, min: 0.2, max: 2.5, doc: size multiplier of the flying glints}
+  bits: {default: 22, min: 0, max: 400, doc: number of tiny sparks flying out}
+  rings: {default: 2, min: 0, max: 3, doc: number of expanding rings (0-3)}
+  ring_radius: {default: 1.0, min: 0.2, max: 1.15, doc: how far the rings and glints travel (multiplier)}
+  flash: {default: 1.0, min: 0, max: 4, doc: brightness of the initial flash}
+  center_glint: {default: true, doc: big cross glint at the centre}
+  glow: {default: 1.0, min: 0, max: 3, doc: bloom strength}
+channels:
+  light: {kind: light, palette: "${colors}", exposure: "${intensity}",
+          bloom: [[1.2, "${0.5 * glow}"], [4, "${0.45 * glow}"], [12, "${0.3 * glow}"]], alpha_gamma: 0.75}
+layers:
+  - id: flash
+    effect: flash
+    at: [128, 128]
+    params: {duration: 0.75, radius: 10, grow: 18.67, brightness: "${2.6 * flash}", decay: 0.08,
+             afterglow_radius: 34, afterglow_brightness: "${0.6 * flash}", afterglow_decay: 0.08}
+  - id: center_glint
+    effect: glints
+    enabled: "${center_glint}"
+    at: [128, 128]
+    anchor: {px: [0, 0]}
+    time_mode: once
+    params: {period: 0.75, mode: single, size: 1.0, line_width: 1.6, flash: "${1.6 * flash}", decay: 9.375,
+             sustain: 0.25, fade_from: 0.55, shrink: 0.652}
+  - id: ring1
+    effect: shockwave
+    enabled: "${rings >= 1}"
+    at: [128, 128]
+    params: {duration: 0.45, radius_start: 8, radius_end: "${8 + 92 * ring_radius}", expand_time: 0.11,
+             width_start: 1.4, width_end: 2.6, brightness: 1.9, fade_time: 0.13}
+  - id: ring2
+    effect: shockwave
+    enabled: "${rings >= 2}"
+    at: [128, 128]
+    start: 0.075
+    params: {duration: 0.4875, radius_start: 8, radius_end: "${8 + 70 * ring_radius}", expand_time: 0.12,
+             width_start: 0.9, width_end: 2.1, brightness: 1.1, fade_time: 0.14}
+  - id: ring3
+    effect: shockwave
+    enabled: "${rings >= 3}"
+    at: [128, 128]
+    start: 0.15
+    params: {duration: 0.45, radius_start: 8, radius_end: "${8 + 52 * ring_radius}", expand_time: 0.11,
+             width_start: 0.8, width_end: 2.0, brightness: 0.8, fade_time: 0.13}
+  - id: stars
+    effect: glints
+    at: [128, 128]
+    anchor: {px: [0, 0]}
+    time_mode: once
+    params: {period: 0.75, mode: burst, count: "${stars}", spread: "${90 * ring_radius}", size: "${star_size}",
+             line_width: 0.9, flash: 0, sustain: 1.5, fade_from: 0.55, shrink: 0.55, travel: 0.8, spin: 1.0}
+  - id: bits
+    effect: burst
+    at: [128, 128]
+    anchor: {px: [0, 0]}
+    params: {duration: 0.75, count: "${bits}", speed_min: "${250 * ring_radius}", speed_max: "${630 * ring_radius}",
+             drag: 6, life_min: 0.75, life_max: 0.75, style: dot, size: 1.0, brightness: 0.8,
+             brightness_var: 0.37, fade_in: 0, fade_out: 2, extent: 124}

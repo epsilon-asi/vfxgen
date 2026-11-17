@@ -1,0 +1,83 @@
+vfxgen: 1
+name: coin_pickup
+description: "Coin pickup: a gold coin pops up spinning, flashes, bursts into sparkles, and a \"+1\" floats up and fades."
+size: [192, 224]
+fps: 30
+duration: 1.0
+loop: false
+blend: alpha
+pivot: {px: [96, 160]}
+vars:
+  colors: {default: holy, doc: "light colour ramp (glow, glints, sparkle pop)"}
+  coin_palette: {default: gold_coin, doc: coin metal colours (shadow -> lit)}
+  text_palette: {default: text_gold, doc: "fill colours of the \"+1\" text (dark -> light)"}
+  outline_palette: {default: "#2b1205", doc: text outline / shadow colour}
+  text: {default: "+1", doc: "floating text (digits, A-Z, + - ! % x)"}
+  text_size: {default: 1.0, min: 0.4, max: 1.5, doc: text size multiplier}
+  coin_size: {default: 1.0, min: 0.4, max: 1.8, doc: coin size multiplier}
+  spin: {default: 2, min: 0, max: 6, doc: coin turns while it rises (whole number)}
+  rise: {default: 1.0, min: 0, max: 2, doc: how far the coin and text travel up (multiplier)}
+  sparkles: {default: 8, min: 0, max: 30, doc: star glints in the final pop}
+  glow: {default: 1.0, min: 0, max: 3, doc: "light exposure (glow, glints)"}
+channels:
+  glow: {kind: light, palette: "${colors}", exposure: "${glow}", bloom: [[2, 0.4], [6, 0.35], [14, 0.25]],
+         alpha_gamma: 0.8}
+  coin: {kind: solid, palette: "${coin_palette}"}
+  text: {kind: solid, palette: "${text_palette}"}
+  light: {kind: light, palette: "${colors}", exposure: "${glow}", bloom: [[1.2, 0.5], [4, 0.4], [10, 0.3]],
+          alpha_gamma: 0.8}
+events:
+  - {name: collect, t: 0.0, data: {}}
+  - {name: pop, t: 0.56, data: {}}
+layers:
+  - id: halo
+    effect: glow
+    at: [96, 160]
+    length: 0.6
+    fade: {in: 0.05, out: 0.15}
+    offset: {keys: [[0, [0, 0]], [0.45, [0, "${-46 * rise}"], out]]}
+    channels: {light: glow}
+    params: {period: 0.6, radius: "${10 * coin_size}", brightness: 0.25, halo_radius: "${22 * coin_size}",
+             halo_brightness: 0.15}
+  - id: coin
+    effect: coin_spin
+    at: [96, 160]
+    length: 0.6
+    offset: {keys: [[0, [0, 0]], [0.45, [0, "${-46 * rise}"], out]]}
+    scale: {keys: [[0, 0.3], [0.12, 1.12, out], [0.22, 1.0, in_out], [0.48, 1.0], [0.6, 0.15, in]]}
+    channels: {solid: coin, light: light}
+    params: {period: 0.6, spins: "${spin}", radius: "${16 * coin_size}", shine: 1.2}
+  - id: pop_flash
+    effect: flash
+    start: 0.54
+    at: [96, "${160 - 46 * rise}"]
+    channels: {light: light}
+    params: {duration: 0.3, radius: "${5 * coin_size}", grow: 60, brightness: 2.2, decay: 0.05,
+             afterglow_radius: "${14 * coin_size}", afterglow_brightness: 0.5, afterglow_decay: 0.08}
+  - id: pop_glints
+    effect: glints
+    start: 0.54
+    at: [96, "${160 - 46 * rise}"]
+    anchor: {px: [0, 0]}
+    time_mode: once
+    channels: {light: light}
+    params: {period: 0.42, mode: burst, count: "${sparkles}", spread: "${34 * coin_size}", size: 0.55,
+             line_width: 0.8, flash: 0.6, sustain: 1.4, fade_from: 0.4, shrink: 0.6, travel: 0.75, spin: 1.0}
+  - id: specks
+    effect: burst
+    start: 0.54
+    at: [96, "${160 - 46 * rise}"]
+    anchor: {px: [0, 0]}
+    channels: {light: light}
+    params: {duration: 0.42, count: "${2 * sparkles}", speed_min: 60, speed_max: 200, drag: 5, gravity: 60,
+             life_min: 0.25, life_max: 0.42, style: dot, size: 0.9, brightness: 1.2, fade_in: 0, fade_out: 1.5,
+             extent: 70}
+  - id: label
+    effect: text
+    start: 0.1
+    at: [96, "${160 - 46 * rise - 34 * coin_size}"]
+    offset: {keys: [[0, [0, 0]], [0.9, [0, "${-26 * rise}"], out]]}
+    channels: {solid: text, light: glow}
+    params: {duration: 0.9, text: "${text}", size: "${20 * text_size}", weight: 0.22, outline: 0.1,
+             outline_palette: "${outline_palette}", shadow: 0.08, glow: 0.25, glow_radius: 0.3, stagger: 0.05,
+             pop: 0.18, overshoot: 0.45, rise: 0.4, fade: 0.3}

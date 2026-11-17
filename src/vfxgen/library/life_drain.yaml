@@ -1,0 +1,68 @@
+vfxgen: 1
+name: life_drain
+description: "Life drain: a wavy blood-red beam of intertwined strands pulls glowing motes out of the victim (right) into the caster's hand (left), which swells as it absorbs them."
+size: [352, 224]
+fps: 24
+duration: 1.0
+loop: true
+blend: additive
+pivot: center
+anchors: {caster: [70, 120], victim: [282, 104]}
+vars:
+  colors: {default: blood, doc: main colour ramp}
+  band: {default: 1.0, min: 0.2, max: 3, doc: width of the wavy band (multiplier)}
+  strands: {default: 3, min: 1, max: 6, doc: intertwined strands}
+  waves: {default: 2, min: 0, max: 6, doc: waves along the beam}
+  flow: {default: 2, min: 1, max: 6, doc: "how fast the strands and motes flow (laps per loop, whole number)"}
+  motes: {default: 30, min: 0, max: 120, doc: motes flowing along the beam}
+  glow: {default: 1.0, min: 0, max: 4, doc: light exposure}
+channels:
+  light: {kind: light, palette: "${colors}", bloom: [[2, 0.6], [7, 0.55], [22, 0.45]],
+          exposure: "${1.1 * glow}", alpha_gamma: 0.8}
+layers:
+  - id: victim
+    effect: glow
+    at: [282, 104]
+    offset: "${[0, 4 * sin(tau * t)]}"
+    params: {period: 1.0, radius: 6, brightness: 0.9, halo_radius: 20, halo_brightness: 0.35, flicker: 0.3, flicker_rate: 12}
+  - id: caster
+    effect: glow
+    at: [70, 120]
+    params: {period: 1.0, radius: 6, brightness: 1.6, halo_radius: 18, halo_brightness: 0.5, pulse: 0.25, pulse_cycles: "${int(flow)}"}
+  - id: beam
+    effect: chain
+    at: [0, 0]
+    anchor: {px: [0, 0]}
+    targets: {a: {layer: victim}, b: {layer: caster}}
+    params:
+      period: 1.0
+      style: drain
+      ax: 30
+      ay: 30
+      bx: 322
+      by: 194
+      margin: 0
+      width: 1.6
+      brightness: 1.0
+      glow: 0.22
+      glow_width: 8
+      band: "${11 * band}"
+      strands: "${int(strands)}"
+      waves: "${int(waves)}"
+      flow: "${int(flow)}"
+      motes: "${int(motes)}"
+      mote_size: 1.7
+      flare: 0.6
+      flare_radius: 7
+  - id: wisps
+    effect: particles
+    attach: {layer: victim}
+    anchor: {px: [0, 0]}
+    params: {period: 1.0, count: 14, shape: disk, radius: 12, angle: -90, spread: 120, speed_min: 10, speed_max: 30,
+             laps_min: 1, laps_max: 2, size: 1.3, brightness: 1.0, style: dot, extent: 45}
+  - id: absorb
+    effect: particles
+    attach: {layer: caster}
+    anchor: {px: [0, 0]}
+    params: {period: 1.0, count: 12, shape: circle, radius: 22, direction: inward, speed_min: 25, speed_max: 40,
+             laps_min: 2, laps_max: 2, size: 1.0, brightness: 1.2, style: streak, tail: 0.06, extent: 40}

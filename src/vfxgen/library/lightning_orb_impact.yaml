@@ -1,0 +1,70 @@
+vfxgen: 1
+name: lightning_orb_impact
+description: "Lightning orb impact: the orb detonates in a blinding flash and shockwave, forked lightning lashes out in all directions and crackles away with a spray of sparks. Pivot on the impact point."
+size: [224, 224]
+fps: 24
+duration: 0.55
+loop: false
+blend: additive
+pivot: {px: [112, 112]}
+anchors: {impact: [112, 112]}
+events:
+  - {name: impact, t: 0.0, data: {radius: 60}}
+vars:
+  colors: {default: electric, doc: main colour ramp (shared by the lightning_orb family)}
+  head_size: {default: 1.0, min: 0.5, max: 1.5, doc: orb size multiplier (match launch and travel)}
+  radius: {default: 1.0, min: 0.4, max: 1.3, doc: reach of the lightning lashes (multiplier)}
+  lashes: {default: 6, min: 0, max: 14, doc: lightning lashes thrown out}
+  sparks: {default: 30, min: 0, max: 120, doc: sparks}
+  tick_rate: {default: 16, min: 4, max: 30, doc: re-jag / flicker changes per second}
+  intensity: {default: 1.0, min: 0, max: 3, doc: brightness multiplier}
+channels:
+  light: {kind: light, palette: "${colors}", bloom: [[2, 0.6], [7, 0.6], [22, 0.45]],
+          exposure: "${intensity}", alpha_gamma: 0.85}
+layers:
+  - id: orb
+    effect: projectile_core
+    at: [112, 112]
+    anchor: head
+    length: 0.06
+    fade: {out: 0.04}
+    scale: {keys: [[0, 1.0], [0.06, 1.7]]}
+    params: {period: 1.0, style: orb, radius: "${10 * head_size}", stretch: 1.2, brightness: 0.9, core: 1.8,
+             rim: 0.9, turbulence: 1.0, halo: 0.35, halo_radius: 2.2, spin: 4}
+  - id: flash
+    effect: flash
+    at: [112, 112]
+    anchor: {px: [0, 0]}
+    params: {duration: 0.3, radius: 7, grow: 100, brightness: 3.0, decay: 0.045, afterglow_radius: 22,
+             afterglow_brightness: 0.5, afterglow_decay: 0.1}
+  - id: ring
+    effect: shockwave
+    at: [112, 112]
+    anchor: {px: [0, 0]}
+    params: {duration: 0.3, radius_start: 8, radius_end: "${72 * radius}", expand_time: 0.07, width_start: 2.5,
+             width_end: 1.2, brightness: 0.9, fade_time: 0.08, breakup: 0.5}
+  - id: lashes
+    effect: chain
+    enabled: "${lashes > 0}"
+    at: [112, 112]
+    anchor: {px: [0, 0]}
+    length: 0.3
+    fade: {out: 0.18}
+    repeat: {count: "${int(lashes)}", jitter: {rotate: 180, scale: 0.3, time: 0.04}}
+    params: {period: 1.0, style: lightning, ax: 4, ay: 0, bx: "${66 * radius}", by: 0, margin: 22, width: 1.2,
+             brightness: 1.2, glow: 0.3, glow_width: 5, roughness: 0.32, tick_rate: "${tick_rate}", strands: 1,
+             branches: 2, branch_length: 0.35, flicker: 0.4, flare: 0.5, flare_radius: 4}
+  - id: crackle
+    effect: arc_field
+    at: [112, 112]
+    scale: 0.5
+    length: 0.45
+    fade: {out: 0.25}
+    params: {period: 1.0, tick_rate: "${tick_rate}", arcs: 40, reach: 1.0, micro_arcs: 3}
+  - id: sparks
+    effect: burst
+    at: [112, 112]
+    anchor: {px: [0, 0]}
+    params: {duration: 0.5, count: "${int(sparks)}", spread: 360, speed_min: 180, speed_max: 380, drag: 4,
+             gravity: 150, life_min: 0.15, life_max: 0.4, style: streak, tail: 0.03, size: 0.8, brightness: 1.8,
+             fade_in: 0, fade_out: 1.4, extent: 100}

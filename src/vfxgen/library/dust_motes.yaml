@@ -1,0 +1,38 @@
+vfxgen: 1
+name: dust_motes
+description: Dust motes hanging in the air - slow specks floating on gentle swirls, catching a diagonal band of light and glinting as they turn.
+size: [256, 256]
+fps: 16
+duration: 4.0
+loop: true
+blend: additive
+pivot: center
+vars:
+  colors: {default: mote, doc: mote colour ramp (faint -> hot)}
+  count: {default: 50, min: 0, max: 300, doc: number of motes}
+  size: {default: 1.0, min: 0.3, max: 3, doc: mote size multiplier}
+  brightness: {default: 1.0, min: 0, max: 4, doc: intensity multiplier}
+  glints: {default: 1.0, min: 0, max: 3, doc: strength of the catch-light flashes}
+  drift: {default: 1.0, min: 0, max: 4, doc: drift speed multiplier}
+  swirl: {default: 1.0, min: 0, max: 4, doc: strength of the swirling eddies}
+  band: {default: 0.6, min: 0, max: 1, doc: how much the light is confined to a diagonal band (0 = everywhere)}
+  band_angle: {default: -60, min: -180, max: 180, doc: direction of the light band (deg)}
+channels:
+  light: {kind: light, palette: "${colors}", bloom: [[1.2, 0.35], [4, 0.2]], exposure: "${brightness}", alpha_gamma: 0.8}
+layers:
+  - id: motes
+    effect: floating_motes
+    at: [128, 128]
+    anchor: {px: [0, 0]}
+    params:
+      period: 4.0
+      width: 236
+      height: 236
+      count: "${int(count)}"
+      size: "${0.75 * size}"
+      glint: "${1.6 * glints}"
+      star: "${0.5 * min(glints, 2)}"
+      drift: "${5 * drift}"
+      curl: "${9 * swirl}"
+      band: "${band}"
+      band_angle: "${band_angle}"

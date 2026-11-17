@@ -1,0 +1,44 @@
+vfxgen: 1
+name: impact_wood
+description: "Wood hit: two-tone splinters burst out tumbling end over end under gravity, with sawdust flecks and a small puff of wood dust. Debris sprays toward -y; rotate so up points away from the struck surface."
+size: [224, 224]
+fps: 30
+duration: 0.9
+loop: false
+blend: alpha
+pivot: {px: [112, 128]}
+vars:
+  colors: {default: wood_splinter, doc: splinter wood colours (dark bark -> pale grain)}
+  dust_palette: {default: dust, doc: wood dust colours (shadow -> lit)}
+  angle: {default: -90, min: -180, max: 180, doc: "spray direction (deg, clockwise from +x; -90 = up)"}
+  spread: {default: 140, min: 10, max: 360, doc: spray cone width (deg)}
+  splinters: {default: 12, min: 0, max: 60, doc: number of splinters}
+  size: {default: 1.0, min: 0.3, max: 2, doc: splinter size multiplier}
+  flecks: {default: 18, min: 0, max: 120, doc: small sawdust flecks}
+  speed: {default: 1.0, min: 0.2, max: 2, doc: launch speed multiplier}
+  gravity: {default: 1.0, min: 0, max: 3, doc: gravity multiplier}
+  dust: {default: 1.0, min: 0, max: 3, doc: dust puff amount (0 = none)}
+channels:
+  dust: {kind: smoke, palette: "${dust_palette}", density: 5.0, shadow: 0.9, ambient: 0.3, relief: 1.4,
+         height_gain: 0.3, size_ref: 224}
+  wood: {kind: solid, palette: "${colors}"}
+events:
+  - {name: impact, t: 0.0, data: {material: wood}}
+layers:
+  - id: dust
+    effect: smoke_burst
+    enabled: "${dust > 0}"
+    at: [112, 128]
+    anchor: {px: [0, 0]}
+    rotate: "${angle + 90}"
+    channels: {smoke: dust}
+    params: {duration: 0.85, mode: ring, count: 8, spread: "${150 * speed}", spread_start: 2, squash: 0.7,
+             drag: 6, rise: 6, ground: false, extent: 70, radius_start: 5, radius_end: 17, life_min: 0.5,
+             life_max: 0.8, stagger: 0.03, density: "${0.13 * dust}", wispiness: 0.6}
+  - id: splinters
+    effect: splinters
+    at: [112, 128]
+    anchor: {px: [0, 0]}
+    channels: {solid: wood}
+    params: {duration: 0.9, angle: "${angle}", spread: "${spread}", count: "${splinters}", size: "${size}",
+             flecks: "${flecks}", speed: "${speed}", gravity: "${750 * gravity}", extent: 92}

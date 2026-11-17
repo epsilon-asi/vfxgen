@@ -1,0 +1,46 @@
+vfxgen: 1
+name: impact_stone
+description: "Stone hit: angular two-tone chips and grit knocked out under gravity, a billowing dust puff and a few short sparks. Debris sprays toward -y; rotate so up points away from the struck surface."
+size: [224, 224]
+fps: 30
+duration: 1.0
+loop: false
+blend: alpha
+pivot: {px: [112, 128]}
+vars:
+  colors: {default: stone_chip, doc: chip colours (shadow -> lit)}
+  dust_palette: {default: stone_dust, doc: dust colours (shadow -> lit)}
+  spark_palette: {default: spark_hot, doc: spark colour ramp}
+  angle: {default: -90, min: -180, max: 180, doc: "spray direction (deg, clockwise from +x; -90 = up)"}
+  spread: {default: 140, min: 10, max: 360, doc: spray cone width (deg)}
+  chips: {default: 14, min: 0, max: 80, doc: number of stone chips}
+  size: {default: 1.0, min: 0.3, max: 2, doc: chip size multiplier}
+  grit: {default: 24, min: 0, max: 150, doc: small grit specks}
+  speed: {default: 1.0, min: 0.2, max: 2, doc: launch speed multiplier}
+  gravity: {default: 1.0, min: 0, max: 3, doc: gravity multiplier}
+  dust: {default: 1.0, min: 0, max: 3, doc: dust puff density (0 = none)}
+  sparks: {default: 6, min: 0, max: 40, doc: short sparks off the stone (0 = none)}
+channels:
+  dust: {kind: smoke, palette: "${dust_palette}", density: 3.0, shadow: 0.8, ambient: 0.3, relief: 1.2,
+         height_gain: 0.3, size_ref: 224}
+  stone: {kind: solid, palette: "${colors}"}
+  light: {kind: light, palette: "${spark_palette}", bloom: [[1, 0.4], [3, 0.35]], alpha_gamma: 0.85}
+events:
+  - {name: impact, t: 0.0, data: {material: stone}}
+layers:
+  - id: chips
+    effect: chips
+    at: [112, 128]
+    anchor: {px: [0, 0]}
+    channels: {solid: stone, smoke: dust}
+    params: {duration: 1.0, angle: "${angle}", spread: "${spread}", count: "${chips}", size: "${1.2 * size}",
+             grit: "${grit}", speed: "${speed}", gravity: "${900 * gravity}", dust: "${0.7 * dust}", extent: 92}
+  - id: sparks
+    effect: burst
+    enabled: "${sparks > 0}"
+    at: [112, 128]
+    anchor: {px: [0, 0]}
+    channels: {light: light}
+    params: {duration: 0.3, count: "${sparks}", angle: "${angle}", spread: "${spread}", speed_min: 250,
+             speed_max: 520, drag: 6, gravity: 400, life_min: 0.1, life_max: 0.22, style: streak, tail: 0.04,
+             size: 0.9, brightness: 1.8, fade_in: 0, fade_out: 1.2, extent: 80}

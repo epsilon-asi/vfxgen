@@ -1,0 +1,37 @@
+vfxgen: 1
+name: portal
+description: "Swirling vortex portal: spiralling arms, bright rim, dark see-through eye, particles sucked in."
+size: [320, 384]
+fps: 20
+duration: 1.6
+loop: true
+vars:
+  colors: {default: void, doc: main colour ramp}
+  eye_palette: {default: abyss, doc: colour ramp of the dark eye (preset or hex list)}
+  intensity: {default: 1.0, min: 0, max: 4, doc: overall brightness (exposure)}
+  arms: {default: 3, min: 0, max: 12, doc: number of spiral arms}
+  twist: {default: 1.15, min: -4, max: 4, doc: how tightly the arms wind}
+  inflow_speed: {default: 1, min: -4, max: 4, doc: "whole-number inward flow (noise periods per loop; 0 = no inflow)"}
+  rotation_speed: {default: 0, min: -4, max: 4, doc: "whole-number extra spin (full turns per loop; negative reverses)"}
+  warp: {default: 1.0, min: 0, max: 3, doc: domain-warp turbulence strength}
+  particles: {default: 46, min: 0, max: 400, doc: number of particles being sucked in}
+  rim: {default: 1.0, min: 0, max: 4, doc: brightness of the rim}
+  radius: {default: 1.0, min: 0.2, max: 1.05, doc: "portal size multiplier (<= 1.05)"}
+  eye_darkness: {default: 0.55, min: 0, max: 3, doc: "opacity of the dark see-through eye (0 = fully transparent)"}
+  glow: {default: 1.0, min: 0, max: 3, doc: bloom strength}
+channels:
+  eye: {kind: smoke, palette: "${eye_palette}", density: "${eye_darkness}", shadow: 0.3, size_ref: 384}
+  light: {kind: light, palette: "${colors}", exposure: "${0.9 * intensity}",
+          bloom: [[1.5, "${0.45 * glow}"], [5, "${0.4 * glow}"], [14, "${0.35 * glow}"]], alpha_gamma: 0.85}
+layers:
+  - id: vortex
+    effect: vortex
+    at: [160, 192]
+    channels: {light: light, smoke: eye}
+    params: {period: 1.6, radius_x: "${116 * radius}", radius_y: "${148 * radius}", arms: "${arms}",
+             twist: "${twist}", inflow_speed: "${inflow_speed}", rotation_speed: "${rotation_speed}",
+             warp: "${warp}", licks: "${rim}", particles: "${particles}", eye: 1.6}
+  - id: rim
+    effect: noisy_rim
+    at: [160, 192]
+    params: {period: 1.6, radius_x: "${116 * radius}", radius_y: "${148 * radius}", brightness: "${rim}"}

@@ -1,0 +1,38 @@
+vfxgen: 1
+name: impact_metal
+description: "Metal hit: a white-hot contact flash with a cross glint, a quick thin ring and a spray of hot streak sparks with drag and gravity, plus a few heavier glowing bits. Debris sprays toward -y; rotate so up points away from the struck surface."
+size: [192, 192]
+fps: 30
+duration: 0.6
+loop: false
+blend: additive
+pivot: {px: [96, 116]}
+vars:
+  colors: {default: spark_hot, doc: spark colour ramp (faint -> white hot)}
+  angle: {default: -90, min: -180, max: 180, doc: "spray direction (deg, clockwise from +x; -90 = up)"}
+  spread: {default: 120, min: 10, max: 360, doc: spray cone width (deg)}
+  sparks: {default: 36, min: 0, max: 200, doc: number of streak sparks}
+  bits: {default: 6, min: 0, max: 40, doc: heavier glowing bits}
+  speed: {default: 1.0, min: 0.2, max: 2.5, doc: spark speed multiplier}
+  gravity: {default: 1.0, min: 0, max: 4, doc: gravity multiplier}
+  flash: {default: 1.0, min: 0, max: 3, doc: contact flash brightness}
+  ring: {default: true, doc: draw the quick impact ring}
+  glow: {default: 1.0, min: 0, max: 3, doc: light exposure}
+channels:
+  light: {kind: light, palette: "${colors}", exposure: "${glow}", bloom: [[1.2, 0.5], [4, 0.45], [12, 0.3]],
+          alpha_gamma: 0.85}
+events:
+  - {name: impact, t: 0.0, data: {material: metal}}
+layers:
+  - id: ring
+    effect: shockwave
+    enabled: "${ring}"
+    at: [96, 116]
+    params: {duration: 0.22, radius_start: 4, radius_end: 30, expand_time: 0.05, width_start: 1.6, width_end: 0.8,
+             brightness: 0.9, fade_time: 0.06}
+  - id: sparks
+    effect: metal_sparks
+    at: [96, 116]
+    anchor: {px: [0, 0]}
+    params: {duration: 0.6, angle: "${angle}", spread: "${spread}", count: "${sparks}", bits: "${bits}",
+             speed: "${0.85 * speed}", gravity: "${650 * gravity}", flash: "${flash}", extent: 78}

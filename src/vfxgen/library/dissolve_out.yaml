@@ -1,0 +1,38 @@
+vfxgen: 1
+name: dissolve_out
+description: "Death dissolve: the sprite burns away under a noisy glowing front, charring ahead of the edge and shedding embers and smoke."
+size: [224, 288]
+fps: 24
+duration: 1.4
+loop: false
+blend: alpha
+pivot: {px: [112, 262]}
+anchors: {feet: [112, 262]}
+vars:
+  colors: {default: fire, doc: "burning edge / ember colour ramp"}
+  smoke_palette: {default: dark_smoke, doc: smoke colour ramp (shadow -> lit)}
+  image: {default: hero.png, doc: "sprite image (PNG with alpha)"}
+  height: {default: 128, min: 16, max: 160, doc: displayed sprite height (px)}
+  direction: {default: down, choices: [none, up, down, left, right], doc: "sweep direction of the dissolve (down = head first)"}
+  sweep: {default: 0.7, min: 0, max: 1, doc: how strongly the sweep direction leads vs pure noise}
+  edge: {default: 0.05, min: 0.01, max: 0.3, doc: burning edge width (fraction of the sweep)}
+  noise_scale: {default: 9, min: 2, max: 40, doc: dissolve noise cell size (px)}
+  char: {default: 0.85, min: 0, max: 1, doc: darkening of the band behind the burning edge}
+  embers: {default: 70, min: 0, max: 400, doc: number of embers shed by the edge}
+  smoke: {default: 0.8, min: 0, max: 3, doc: smoke density (0 = off)}
+  glow: {default: 1.0, min: 0, max: 3, doc: brightness of the burning edge and embers}
+events:
+  - {name: start, t: 0.0}
+  - {name: gone, t: 1.12}
+channels:
+  smoke: {kind: smoke, palette: "${smoke_palette}", density: 1.0, shadow: 0.4, size_ref: 256}
+  solid: {kind: solid}
+  light: {kind: light, palette: "${colors}", bloom: [[1.5, 0.5], [5, 0.4], [12, 0.2]], exposure: 1.0, alpha_gamma: 0.8}
+layers:
+  - id: sprite
+    effect: sprite
+    at: [112, 262]
+    anchor: {px: [0, 0]}
+    params: {mode: dissolve, duration: 1.4, dissolve_end: 0.8, image: "${image}", height: "${height}",
+             direction: "${direction}", sweep: "${sweep}", edge_width: "${edge}", noise_scale: "${noise_scale}",
+             char: "${char}", embers: "${embers}", smoke: "${smoke}", glow: "${glow}", ember_size: 1.1}

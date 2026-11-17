@@ -1,0 +1,48 @@
+vfxgen: 1
+name: slash
+description: Single crescent sword slash with a hot cutting edge and speed lines.
+size: [256, 256]
+fps: 24
+duration: "${duration}"
+vars:
+  colors: {default: steel, doc: main colour ramp}
+  duration: {default: 0.334, min: 0.1, max: 2, doc: seconds the slash lasts (legacy 8 frames at 24 fps)}
+  radius: {default: 1.0, min: 0.3, max: 1.12, doc: arc radius multiplier}
+  thickness: {default: 1.0, min: 0.2, max: 3, doc: crescent thickness multiplier}
+  arc_angle: {default: 165.0, min: 30, max: 300, doc: degrees of arc the blade sweeps}
+  squash: {default: 0.6, min: 0.1, max: 1, doc: vertical squash of the arc (1 = circle)}
+  angle: {default: 0.0, doc: rotation of the slash in degrees}
+  angle_jitter: {default: 26.0, min: 0, max: 180, doc: "random extra rotation, +/- degrees"}
+  flip: {default: -1, choices: [-1, 0, 1], doc: "-1 random, 0 normal, 1 upside-down (mirror the swing)"}
+  edge: {default: 1.0, min: 0, max: 4, doc: brightness of the hot cutting edge}
+  glow: {default: 1.0, min: 0, max: 4, doc: overall light exposure}
+  speed_lines: {default: 7, min: 0, max: 40, doc: number of thin speed lines along the cut}
+  sparks: {default: 0, min: 0, max: 80, doc: number of small sparks thrown off the edge}
+channels:
+  light: {kind: light, palette: "${colors}", bloom: [[1.2, 0.5], [4, 0.45], [12, 0.3]],
+          exposure: "${1.25 * glow}", alpha_gamma: 0.9}
+layers:
+  - id: slash
+    effect: crescent_slash
+    at: [128, 128]
+    anchor: {px: [0, 0]}
+    params:
+      duration: "${duration}"
+      radius: "${min(100 * radius, 112)}"
+      thickness: "${46 * thickness}"
+      arc_angle: "${arc_angle}"
+      squash: "${squash}"
+      angle: "${angle}"
+      angle_jitter: "${angle_jitter}"
+      flip: "${flip}"
+      edge: "${edge}"
+      speed_lines: "${speed_lines}"
+      sparks: "${sparks}"
+      spark_delay: 0.3
+      spark_speed_min: 150
+      spark_speed_max: 320
+      spark_life_min: 0.15
+      spark_life_max: 0.25
+      spark_gravity: 300
+      spark_width: 0.7
+      spark_brightness: 1.8

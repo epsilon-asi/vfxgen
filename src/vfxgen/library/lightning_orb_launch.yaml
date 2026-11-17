@@ -1,0 +1,71 @@
+vfxgen: 1
+name: lightning_orb_launch
+description: "Lightning orb cast: crackling arcs gather at the muzzle, a jagged bolt snaps forward to the spawn point where the orb ignites, launch rings and sparks burst out. Faces +x; pivot on the muzzle."
+size: [192, 160]
+fps: 24
+duration: 0.5
+loop: false
+blend: additive
+pivot: {px: [40, 80]}
+anchors: {muzzle: [40, 80], spawn: [76, 80]}
+events:
+  - {name: spawn_projectile, t: 0.18, data: {offset: [36, 0], effect: lightning_orb_travel}}
+vars:
+  colors: {default: electric, doc: main colour ramp (shared by the lightning_orb family)}
+  head_size: {default: 1.0, min: 0.5, max: 1.5, doc: orb size multiplier (match travel and impact)}
+  sparks: {default: 16, min: 0, max: 80, doc: sparks thrown forward}
+  tick_rate: {default: 16, min: 4, max: 30, doc: re-jag / flicker changes per second}
+  intensity: {default: 1.0, min: 0, max: 3, doc: brightness multiplier}
+channels:
+  light: {kind: light, palette: "${colors}", bloom: [[2, 0.6], [7, 0.6], [22, 0.45]],
+          exposure: "${intensity}", alpha_gamma: 0.85}
+layers:
+  - id: gather
+    effect: arc_field
+    at: [42, 80]
+    scale: 0.3
+    length: 0.28
+    fade: {out: 0.1}
+    params: {period: 1.0, tick_rate: "${tick_rate}", arcs: 30, reach: 0.9, hop_chance: 0.6, micro_arcs: 3}
+  - id: snap
+    effect: chain
+    at: [40, 80]
+    anchor: {px: [0, 0]}
+    start: 0.1
+    length: 0.16
+    fade: {out: 0.08}
+    params: {period: 1.0, style: lightning, ax: 2, ay: 0, bx: 36, by: 0, margin: 20, width: 1.3, brightness: 1.3,
+             glow: 0.35, glow_width: 5, roughness: 0.35, tick_rate: "${tick_rate}", strands: 2, branches: 2,
+             branch_length: 0.4, flicker: 0.3, flare: 0.6, flare_radius: 5}
+  - id: flash
+    effect: flash
+    at: [40, 80]
+    anchor: {px: [0, 0]}
+    params: {duration: 0.3, radius: 4, grow: 40, brightness: 2.0, decay: 0.06, afterglow_radius: 14,
+             afterglow_brightness: 0.4, afterglow_decay: 0.1}
+  - id: rings
+    effect: muzzle_ring
+    at: [40, 80]
+    anchor: {px: [0, 0]}
+    start: 0.12
+    params: {duration: 0.32, count: 2, stagger: 0.06, radius_start: 6, radius_end: "${24 * head_size}",
+             squash: 0.35, travel: 48, offset: 8, width: 1.6, brightness: 1.6}
+  - id: orb
+    effect: projectile_core
+    at: [76, 80]
+    anchor: head
+    start: 0.1
+    length: 0.12
+    fade: {out: 0.03}
+    scale: {keys: [[0, 0.2], [0.08, 1.0, out]]}
+    params: {period: 1.0, style: orb, radius: "${10 * head_size}", stretch: 1.2, brightness: 0.9, core: 1.8,
+             rim: 0.9, turbulence: 1.0, halo: 0.35, halo_radius: 2.2, spin: 4, pulse: 0.08, pulse_cycles: 8,
+             flicker: 0.3, flicker_rate: "${tick_rate}"}
+  - id: sparks
+    effect: burst
+    at: [46, 80]
+    anchor: {px: [0, 0]}
+    start: 0.1
+    params: {duration: 0.35, count: "${int(sparks)}", angle: 0, spread: 110, speed_min: 160, speed_max: 340,
+             drag: 5, life_min: 0.12, life_max: 0.28, style: streak, tail: 0.025, size: 0.8, brightness: 1.8,
+             fade_in: 0, fade_out: 1.4, extent: 130}

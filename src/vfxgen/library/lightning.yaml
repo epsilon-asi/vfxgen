@@ -1,0 +1,31 @@
+vfxgen: 1
+name: lightning
+description: "Branching lightning strike: hit, flicker, re-strike, fade."
+size: [256, 512]
+fps: 16
+duration: 0.625
+loop: false
+vars:
+  colors: {default: electric, doc: main colour ramp}
+  intensity: {default: 1.0, min: 0, max: 4, doc: overall brightness (exposure)}
+  width: {default: 1.0, min: 0.1, max: 4, doc: stroke width multiplier}
+  roughness: {default: 0.24, min: 0, max: 1, doc: jaggedness of the bolt's overall shape}
+  jitter: {default: 0.21, min: 0, max: 1, doc: per-tick crackle of the path}
+  branches: {default: -1, min: -1, max: 20, doc: "number of side branches (-1 = random 4-6)"}
+  sub_branches: {default: true, doc: allow branches to fork again}
+  sway: {default: 0.08, min: 0, max: 0.5, doc: "random sideways offset of start/end (fraction of 256 px)"}
+  impact: {default: 1.0, min: 0, max: 4, doc: "brightness of the ground impact flare (0 = off)"}
+  restrike: {default: true, doc: "flicker + re-strike envelope (false = single smooth fade)"}
+  glow: {default: 1.0, min: 0, max: 3, doc: bloom strength}
+  tick_rate: {default: 16, min: 1, max: 60, doc: re-jag / flicker changes per second}
+channels:
+  light: {kind: light, palette: "${colors}", exposure: "${intensity}",
+          bloom: [[3, "${0.7 * glow}"], [10, "${0.9 * glow}"], [32, "${0.9 * glow}"]], alpha_gamma: 0.85}
+layers:
+  - id: bolt
+    effect: bolt
+    at: [128, 20]
+    anchor: {px: [0, 0]}
+    params: {duration: 0.625, length: 448, lateral: 60, width: "${width}", roughness: "${roughness}",
+             jitter: "${jitter}", branches: "${branches}", sub_branches: "${sub_branches}", sway: "${sway}",
+             impact: "${impact}", restrike: "${restrike}", tick_rate: "${tick_rate}"}

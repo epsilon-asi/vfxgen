@@ -1,0 +1,37 @@
+vfxgen: 1
+name: bleed_status
+description: "Bleeding status overlay (loop, no sprite): blood drops well up on the body and fall, with smaller droplets. Pivot at the character's feet (sized for a ~128 px tall character)."
+size: [144, 176]
+fps: 16
+duration: 2.0
+loop: true
+blend: alpha
+pivot: {px: [72, 164]}
+anchors: {feet: [72, 164]}
+vars:
+  colors: {default: blood, doc: "highlight glow colour ramp"}
+  blood_color: {default: "#c4121e", doc: colour of the drops}
+  body_height: {default: 1.0, min: 0.5, max: 1.2, doc: character height multiplier (128 px = 1)}
+  drops: {default: 5, min: 0, max: 20, doc: big drops per loop}
+  droplets: {default: 6, min: 0, max: 30, doc: small droplets per loop}
+  fall: {default: 50, min: 10, max: 70, doc: how far drops fall (px)}
+channels:
+  solid: {kind: solid}
+  light: {kind: light, palette: "${colors}", bloom: [[1.5, 0.3]], exposure: 1.0, alpha_gamma: 0.9}
+layers:
+  - id: drops
+    effect: glyph
+    at: [72, "${164 - 76 * body_height}"]
+    anchor: {px: [0, 0]}
+    params: {period: 2.0, symbol: drop, count: "${int(drops)}", laps: 1, phases: random, spread_x: 26,
+             spread_y: "${28 * body_height}", rise: "${-fall}", accel: 2.4, drift: 0, drift_var: 0, sway: 0,
+             size_start: 6, size_end: 10, size_var: 0.25, tilt: 0, wobble: 0, fade_in: 0.2, fade_out: 0.22, outline: 0.9,
+             glow: 0.0, glyph_palette: "${blood_color}"}
+  - id: droplets
+    effect: glyph
+    at: [72, "${164 - 70 * body_height}"]
+    anchor: {px: [0, 0]}
+    params: {period: 1.0, symbol: drop, count: "${int(droplets)}", laps: 1, phases: random, spread_x: 22,
+             spread_y: "${32 * body_height}", rise: "${-0.8 * fall}", accel: 2.0, drift: 0, drift_var: 0, sway: 0,
+             size_start: 4.5, size_end: 5.5, size_var: 0.2, tilt: 0, wobble: 0, fade_in: 0.1, fade_out: 0.3, outline: 0.7,
+             glow: 0.0, glyph_palette: "${blood_color}"}

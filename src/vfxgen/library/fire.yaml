@@ -1,0 +1,71 @@
+vfxgen: 1
+name: fire
+description: "Bonfire: rising noise flame with licking tongues, wisps and embers."
+size: [256, 384]
+fps: 24
+duration: 1.0
+loop: true
+anchors: {base: [128, 320]}
+vars:
+  colors: {default: fire, doc: main colour ramp (faint edge -> white-hot core)}
+  height: {default: 1.0, min: 0.2, max: 1.25, doc: flame height multiplier (keep <= ~1.2 to stay in frame)}
+  width: {default: 1.0, min: 0.2, max: 1.6, doc: flame base width multiplier}
+  intensity: {default: 1.0, min: 0, max: 4, doc: overall brightness (higher = whiter / hotter)}
+  turbulence: {default: 1.0, min: 0, max: 3, doc: "noise strength: more tongues, wisps and break-up"}
+  speed: {default: 1, min: 1, max: 6, doc: rise speed in noise periods per loop (whole number keeps the loop seamless)}
+  sway: {default: 1.0, min: 0, max: 3, doc: sideways lick / domain-warp amount}
+  core: {default: 1.0, min: 0, max: 4, doc: extra heat of the white-hot core near the base}
+  embers: {default: 26, min: 0, max: 200, doc: number of rising embers (0 = off)}
+  glow: {default: 1.0, min: 0, max: 4, doc: bloom / base glow strength}
+channels:
+  light: {kind: light, palette: "${colors}", exposure: 0.9, alpha_gamma: 0.65,
+          bloom: [[1.5, "${0.2 * glow}"], [6, "${0.18 * glow}"], [20, "${0.14 * glow}"]]}
+layers:
+  - id: base_glow
+    effect: glow
+    at: [128, 304]
+    params: {radius: "${40 * width}", brightness: "${0.08 * glow * intensity}", halo_radius: 0}
+  - id: flame
+    effect: flame
+    at: [128, 320]
+    anchor: base
+    params:
+      style: fire
+      height: "${240 * height}"
+      half_width: "${68 * width}"
+      cell_x: "${15 * sqrt(width)}"
+      cell_y: "${46 * sqrt(height)}"
+      speed: "${int(round(speed))}"
+      noise_base: "${0.5 * turbulence}"
+      noise_tip: "${1.45 * turbulence}"
+      sway: "${sway}"
+      core: "${core}"
+      intensity: "${intensity}"
+  - id: embers
+    effect: particles
+    at: [128, 280]
+    anchor: {px: [0, 0]}
+    params:
+      count: "${int(embers)}"
+      period: 1.0
+      shape: box
+      radius: "${40 * width}"
+      radius_y: 0
+      angle: -90
+      spread: 14
+      speed_min: "${135 * int(round(speed))}"
+      speed_max: "${234 * int(round(speed))}"
+      laps_min: "${int(round(speed))}"
+      laps_max: "${2 * int(round(speed))}"
+      sway: 10
+      sway_freq: 2
+      style: streak
+      tail: 0.012
+      size: 0.9
+      brightness: 2.0
+      brightness_var: 0.38
+      twinkle: 0.4
+      twinkle_rate: 3
+      fade_in: 0.35
+      fade_out: 0.7
+      extent: 300

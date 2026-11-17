@@ -1,0 +1,29 @@
+vfxgen: 1
+name: outline_glow
+description: "Selection / empowered highlight: a pulsing glow outline and inner rim light around the sprite (seamless loop)."
+size: [176, 192]
+fps: 16
+duration: 2.0
+loop: true
+blend: alpha
+pivot: {px: [88, 172]}
+anchors: {feet: [88, 172]}
+vars:
+  colors: {default: "#ffc83a", doc: "glow colour ramp (single hex or ramp)"}
+  image: {default: hero.png, doc: "sprite image (PNG with alpha)"}
+  height: {default: 128, min: 16, max: 150, doc: displayed sprite height (px)}
+  outline: {default: 1.0, min: 0, max: 3, doc: outline halo brightness}
+  rim: {default: 0.6, min: 0, max: 3, doc: inner rim light brightness}
+  radius: {default: 5, min: 1, max: 9, doc: halo radius (px)}
+  pulse: {default: 0.35, min: 0, max: 1, doc: pulse depth}
+  pulses: {default: 2, min: 0, max: 8, doc: pulses per loop (whole number)}
+channels:
+  solid: {kind: solid}
+  light: {kind: light, palette: "${colors}", bloom: [[2, 0.4], [6, 0.3]], exposure: 1.0, alpha_gamma: 0.8}
+layers:
+  - id: sprite
+    effect: sprite_loop
+    at: [88, 172]
+    anchor: {px: [0, 0]}
+    params: {period: 2.0, image: "${image}", height: "${height}", outline: "${outline}", rim: "${rim}",
+             glow_radius: "${radius}", pulse: "${pulse}", pulse_cycles: "${int(round(pulses))}"}

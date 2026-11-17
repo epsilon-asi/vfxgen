@@ -1,0 +1,76 @@
+vfxgen: 1
+name: swirling_smoke
+description: Rising column of billowing grey smoke carried along curling eddies, with a thinner wisp layer twisting faster around it.
+size: [256, 384]
+fps: 16
+duration: 2.0
+loop: true
+blend: alpha
+pivot: base
+anchors: {base: [128, 340]}
+vars:
+  colors: {default: smoke, doc: smoke colour ramp (shadow -> lit)}
+  puffs: {default: 30, min: 1, max: 120, doc: number of puffs in the main column}
+  wisps: {default: 16, min: 0, max: 80, doc: "number of thinner, faster-swirling wisp puffs (0 = none)"}
+  swirl: {default: 1.0, min: 0, max: 3, doc: strength of the curling eddies}
+  eddy_size: {default: 1.0, min: 0.3, max: 3, doc: size of the eddies}
+  height: {default: 1.0, min: 0.3, max: 1.1, doc: column height multiplier}
+  width: {default: 1.0, min: 0.3, max: 1.6, doc: column width / puff size multiplier}
+  density: {default: 1.0, min: 0, max: 4, doc: smoke opacity multiplier}
+  speed: {default: 1, min: 1, max: 4, doc: rise laps per loop (whole number keeps the loop seamless)}
+  relief: {default: 1.0, min: 0, max: 3, doc: strength of the billow lighting (0 = flat)}
+channels:
+  smoke: {kind: smoke, palette: "${colors}", density: "${5.0 * density}", shadow: 1.0, relief: "${relief}",
+          ambient: 0.18, height_gain: 0.8, size_ref: 384}
+layers:
+  - id: column
+    effect: smoke_puffs
+    at: [128, 340]
+    anchor: origin
+    params:
+      mode: column
+      period: 2.0
+      count: "${int(puffs)}"
+      laps: "${int(round(speed))}"
+      rise: "${270 * height}"
+      spread: "${16 * width}"
+      spread_start: "${5 * width}"
+      sway: "${6 * width}"
+      drift: 0
+      radius_start: "${12 * width}"
+      radius_end: "${44 * width}"
+      density: "${0.2 * 30 / int(puffs)}"
+      billow: 0.85
+      wisp_start: 0.15
+      wispiness: 0.5
+      fade_in: 0.12
+      fade_out: 0.5
+      spin: 1.4
+      curl: "${38 * swirl * int(round(speed))}"
+      curl_scale: "${75 * eddy_size}"
+  - id: wisps
+    effect: smoke_puffs
+    enabled: "${int(wisps) > 0}"
+    at: [128, 330]
+    anchor: origin
+    params:
+      mode: column
+      period: 2.0
+      count: "${max(int(wisps), 1)}"
+      laps: "${int(round(speed))}"
+      rise: "${230 * height}"
+      spread: "${24 * width}"
+      spread_start: "${4 * width}"
+      sway: 0
+      drift: 0
+      radius_start: "${6 * width}"
+      radius_end: "${22 * width}"
+      density: "${0.16 * 16 / max(int(wisps), 1)}"
+      billow: 1.0
+      wisp_start: 0.2
+      wispiness: 0.7
+      fade_in: 0.15
+      fade_out: 0.45
+      spin: 2.0
+      curl: "${80 * swirl * int(round(speed))}"
+      curl_scale: "${32 * eddy_size}"

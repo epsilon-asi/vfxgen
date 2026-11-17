@@ -1,0 +1,54 @@
+vfxgen: 1
+name: landing_dust
+description: "Landing dust: a heavy landing kicks dust rolling out along the ground to both sides, a low dust ring and a few grains thrown up. Pivot on the feet / ground point."
+size: [256, 160]
+fps: 24
+duration: 0.8
+loop: false
+blend: alpha
+pivot: {px: [128, 120]}
+anchors: {ground: [128, 120]}
+events:
+  - {name: land, t: 0.0}
+vars:
+  colors: {default: dust, doc: dust colour ramp (shadow -> lit)}
+  spread: {default: 1.0, min: 0.3, max: 1.5, doc: how far the dust rolls sideways}
+  height: {default: 1.0, min: 0.3, max: 2, doc: how high the dust billows}
+  density: {default: 1.0, min: 0, max: 3, doc: dust opacity multiplier}
+  puffs: {default: 26, min: 2, max: 80, doc: dust puffs}
+  pebbles: {default: 8, min: 0, max: 40, doc: grains thrown up}
+channels:
+  smoke: {kind: smoke, palette: "${colors}", density: 6.0, shadow: 0.9, ambient: 0.25, relief: 1.6,
+          height_gain: 0.3, size_ref: 256}
+layers:
+  - id: ring
+    effect: ripple
+    at: [128, 120]
+    anchor: {px: [0, 0]}
+    channels: {volume: smoke}
+    params: {duration: 0.6, radius_start: 10, radius_end: "${80 * spread}", expand_time: 0.15, width: 2.5,
+             width_grow: 8, density: "${0.12 * density}", fade_time: 0.25, squash: 0.18}
+  - id: roll
+    effect: smoke_burst
+    at: [128, 120]
+    anchor: origin
+    params: {duration: 0.8, mode: burst, count: "${int(puffs)}", spread: "${380 * spread}", spread_start: 4,
+             drag: 5.5, lateral_min: 0.55, forward: 0.5, lift: "${40 * height}", rise: "${8 * height}",
+             ground: true, extent: "${100 * spread}", radius_start: 5, radius_end: "${14 * height}",
+             radius_var: 0.25, life_min: 0.55, life_max: 0.75, stagger: 0.03, fade_in: 0.03, fade_out: 0.35,
+             density: "${0.18 * density}", billow: 0.8, wisp_start: 0.15, wispiness: 0.5, spin: 1.5, grain: 6}
+  - id: plume
+    effect: smoke_burst
+    at: [128, 120]
+    anchor: origin
+    params: {duration: 0.75, mode: burst, count: 6, spread: 90, spread_start: 0, drag: 5, lateral_min: 0.1,
+             forward: 0.5, lift: "${70 * height}", rise: "${14 * height}", ground: true, extent: 60,
+             radius_start: 6, radius_end: "${16 * height}", radius_var: 0.25, life_min: 0.5, life_max: 0.7,
+             stagger: 0.04, fade_in: 0.05, fade_out: 0.35, density: "${0.16 * density}", billow: 0.8,
+             wisp_start: 0.2, wispiness: 0.6, grain: 6}
+  - id: pebbles
+    effect: pebbles
+    at: [128, 120]
+    anchor: {px: [0, 0]}
+    params: {duration: 0.6, count: "${int(pebbles)}", speed_x: "${90 * spread}", speed_min: "${100 * height}",
+             speed_max: "${260 * height}", gravity: 1500, brightness: "${2.5 * density}", visible: 0.5}

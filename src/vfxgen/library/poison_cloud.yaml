@@ -1,0 +1,81 @@
+vfxgen: 1
+name: poison_cloud
+description: Toxic green gas cloud churning in place, with an inner glow, glowing motes and popping bubbles.
+size: [320, 256]
+fps: 16
+duration: 2.0
+loop: true
+anchors: {center: [160, 148.48]}
+vars:
+  colors: {default: toxic, doc: "emissive colour ramp (glow, motes, bubbles)"}
+  gas_palette: {default: poison_gas, doc: colour ramp of the gas (shadow -> lit)}
+  puffs: {default: 30, min: 1, max: 120, doc: number of gas puffs alive at once}
+  spread: {default: 1.0, min: 0.3, max: 1.5, doc: cloud width/height multiplier}
+  density: {default: 1.0, min: 0, max: 4, doc: gas opacity multiplier}
+  glow: {default: 0.35, min: 0, max: 3, doc: strength of the faint emissive glow inside the gas (0 = off)}
+  motes: {default: 26, min: 0, max: 200, doc: number of rising glowing motes}
+  bubbles: {default: 6, min: 0, max: 40, doc: number of popping bubbles}
+  speed: {default: 1, min: 1, max: 6, doc: loop cycles per animation (whole number keeps the loop seamless)}
+  churn: {default: 1.0, min: 0, max: 3, doc: how much puffs spin and roll}
+channels:
+  gas: {kind: smoke, palette: "${gas_palette}", density: 6.0, shadow: 0.8, ambient: 0.25, relief: 1.0,
+        height_gain: 0.8, size_ref: 320}
+  light: {kind: light, palette: "${colors}", bloom: [[1.5, 0.4], [5, 0.35]], exposure: 1.0, alpha_gamma: 0.9,
+          glow_from: {channel: gas, amount: "${0.25 * glow}", blur: 10}}
+layers:
+  - id: gas
+    effect: smoke_puffs
+    at: [160, 148.48]
+    anchor: origin
+    channels: {smoke: gas}
+    params:
+      mode: roll
+      period: 2.0
+      count: "${int(puffs)}"
+      laps: "${int(round(speed))}"
+      spread: "${60 * spread}"
+      spread_start: 39
+      squash: 0.423
+      rise: 18
+      radius_start: "${22 * sqrt(spread)}"
+      radius_end: "${48 * sqrt(spread)}"
+      radius_var: 0.22
+      density: "${0.16 * density}"
+      billow: 0.8
+      wisp_start: 0.16
+      wispiness: 0.4
+      fade_in: 0.25
+      fade_out: 0.55
+      spin: "${1.4 * churn}"
+  - id: motes
+    effect: particles
+    at: [160, 160.48]
+    anchor: {px: [0, 0]}
+    params:
+      count: "${int(motes)}"
+      period: 2.0
+      shape: box
+      radius: "${80 * spread}"
+      radius_y: 16
+      angle: -90
+      spread: 12
+      speed_min: "${25 * int(round(speed))}"
+      speed_max: "${55 * int(round(speed))}"
+      laps_min: "${int(round(speed))}"
+      laps_max: "${2 * int(round(speed))}"
+      sway: 6
+      sway_freq: 2
+      style: dot
+      size: 1.05
+      brightness: 2.2
+      brightness_var: 0.45
+      halo: 0.12
+      fade_in: 0.5
+      fade_out: 1.2
+      extent: 200
+  - id: bubbles
+    effect: bubbles
+    at: [160, 158.48]
+    anchor: {px: [0, 0]}
+    params: {period: 2.0, count: "${int(bubbles)}", laps: "${int(round(speed))}", spread_x: "${50 * spread}",
+             spread_y: 14, rise: 30}

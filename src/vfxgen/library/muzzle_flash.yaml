@@ -1,0 +1,69 @@
+vfxgen: 1
+name: muzzle_flash
+description: "Gun muzzle flash: star burst and forward cone, quick smoke wisp. Faces +x; rotate to aim."
+size: [256, 256]
+fps: 24
+duration: 0.25
+loop: false
+anchors: {muzzle: [51.2, 128]}
+vars:
+  colors: {default: fire, doc: "main colour ramp (flash, sparks)"}
+  smoke_palette: {default: smoke, doc: colour ramp of the smoke wisp (shadow -> lit)}
+  length: {default: 1.0, min: 0.2, max: 1.2, doc: forward cone length multiplier}
+  spikes: {default: 5, min: 0, max: 16, doc: number of side star spikes}
+  spread: {default: 1.0, min: 0, max: 3, doc: half-angle multiplier of the flame cone}
+  intensity: {default: 1.0, min: 0, max: 4, doc: flash brightness multiplier}
+  smoke: {default: 1.0, min: 0, max: 4, doc: smoke wisp amount (0 = off)}
+  sparks: {default: 8, min: 0, max: 60, doc: number of tiny forward sparks}
+channels:
+  smoke: {kind: smoke, palette: "${smoke_palette}", density: 5.0, shadow: 0.8, ambient: 0.3, relief: 1.0,
+          height_gain: 0.8, size_ref: 256}
+  light: {kind: light, palette: "${colors}", bloom: [[1.5, 0.5], [5, 0.4], [14, 0.3]], exposure: 1.0,
+          alpha_gamma: 0.7}
+layers:
+  - id: wisp
+    effect: smoke_burst
+    enabled: "${smoke > 0}"
+    at: [67.2, 128]
+    anchor: origin
+    params:
+      duration: 0.25
+      mode: burst
+      count: 7
+      spread: 220
+      spread_start: 57
+      drag: 4.5
+      lateral_min: 0.0
+      forward: 1.0
+      lift: 0
+      rise: 14
+      spawn_y: 6
+      ground: false
+      extent: 0
+      radius_start: 7.6
+      radius_end: 16.7
+      radius_var: 0.25
+      life_min: 0.25
+      life_max: 0.25
+      stagger: 0
+      fade_in: 0.2
+      fade_out: 0.45
+      density: "${0.22 * smoke}"
+      billow: 0.8
+      wisp_start: 0.2
+      wispiness: 0.4
+      spin: 1.0
+      grain: 4
+  - id: flash
+    effect: muzzle_burst
+    at: [51.2, 128]
+    anchor: muzzle
+    params: {duration: 0.25, length: "${150 * length}", spread: "${9.2 * spread}", spikes: "${int(spikes)}",
+             spike_length: "${34 * sqrt(length)}", intensity: "${intensity}", decay: 0.05, tick_rate: 24}
+  - id: sparks
+    effect: burst
+    at: [61.2, 128]
+    anchor: {px: [0, 0]}
+    params: {duration: 0.25, count: "${int(sparks)}", shape: point, angle: 0, spread: "${min(50 * spread, 360)}",
+             speed_min: 240, speed_max: 432, style: streak, tail: 0.05, size: 0.8, brightness: 1.2,
+             brightness_var: 0.33, fade_in: 0, fade_out: 2, life_min: 0.25, life_max: 0.25, extent: 175}

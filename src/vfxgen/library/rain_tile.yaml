@@ -1,0 +1,37 @@
+vfxgen: 1
+name: rain_tile
+description: Seamless tile of slanted rain streaks falling through the frame (tiles in space and loops in time).
+size: [256, 256]
+fps: 24
+duration: 1.0
+loop: true
+tile: true
+blend: alpha
+pivot: top_left
+vars:
+  colors: {default: rain, doc: rain colour ramp (faint -> bright)}
+  density: {default: 110, min: 0, max: 600, doc: number of drops in the tile}
+  speed: {default: 1.0, min: 0.2, max: 3, doc: fall speed multiplier}
+  wind: {default: 0.15, min: -1, max: 1, doc: slant (sideways px per px of fall; negative = to the left)}
+  length: {default: 1.0, min: 0.2, max: 4, doc: streak length multiplier}
+  thickness: {default: 1.0, min: 0.3, max: 3, doc: streak thickness multiplier}
+  brightness: {default: 1.0, min: 0, max: 4, doc: streak intensity multiplier}
+  depth: {default: 0.6, min: 0, max: 1, doc: "depth spread (far drops slower, thinner, dimmer)"}
+channels:
+  light: {kind: light, palette: "${colors}", bloom: [[1, 0.25], [3, 0.12]], exposure: 1.0, alpha_gamma: 0.9}
+layers:
+  - id: rain
+    effect: rain_sheet
+    at: [0, 0]
+    anchor: {px: [0, 0]}
+    params:
+      width: 256
+      height: 256
+      period: 1.0
+      count: "${int(density)}"
+      speed: "${700 * speed}"
+      wind: "${wind}"
+      length: "${0.035 * length}"
+      thickness: "${0.55 * thickness}"
+      brightness: "${0.85 * brightness}"
+      depth: "${depth}"

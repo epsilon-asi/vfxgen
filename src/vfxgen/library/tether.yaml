@@ -1,0 +1,65 @@
+vfxgen: 1
+name: tether
+description: "Energy tether between two bobbing anchors: a smooth sagging line of light with a travelling wave and bright pulses running from the caster (left) to the bound target (right)."
+size: [352, 224]
+fps: 24
+duration: 2.0
+loop: true
+blend: additive
+pivot: center
+anchors: {caster: [64, 112], target: [288, 112]}
+vars:
+  colors: {default: holy, doc: main colour ramp}
+  sag: {default: 22, min: -60, max: 60, doc: "droop at the middle (px, negative = arches up)"}
+  wave: {default: 5, min: 0, max: 20, doc: travelling wave amplitude (px)}
+  waves: {default: 2, min: 0, max: 8, doc: waves along the tether}
+  pulses: {default: 2, min: 0, max: 6, doc: bright pulses on the tether at once}
+  flow: {default: 1, min: 0, max: 6, doc: "pulse / wave laps per loop (whole number)"}
+  width: {default: 1.0, min: 0.3, max: 3, doc: line width multiplier}
+  bob: {default: 1.0, min: 0, max: 3, doc: how much the anchors drift (multiplier)}
+  glow: {default: 1.0, min: 0, max: 4, doc: light exposure}
+channels:
+  light: {kind: light, palette: "${colors}", bloom: [[2, 0.55], [7, 0.5], [20, 0.4]],
+          exposure: "${glow}", alpha_gamma: 0.85}
+layers:
+  - id: caster
+    effect: glow
+    at: [64, 112]
+    offset: "${[0, 5 * bob * sin(tau * t / 2)]}"
+    params: {period: 2.0, radius: 5, brightness: 1.5, halo_radius: 16, halo_brightness: 0.4, pulse: 0.2, pulse_cycles: 4}
+  - id: target
+    effect: glow
+    at: [288, 112]
+    offset: "${[4 * bob * sin(tau * t / 2), -9 * bob * cos(tau * t / 2)]}"
+    params: {period: 2.0, radius: 4, brightness: 1.3, halo_radius: 14, halo_brightness: 0.35, pulse: 0.2, pulse_cycles: 4}
+  - id: tether
+    effect: chain
+    at: [0, 0]
+    anchor: {px: [0, 0]}
+    targets: {a: {layer: caster}, b: {layer: target}}
+    params:
+      period: 2.0
+      style: tether
+      ax: 30
+      ay: 30
+      bx: 322
+      by: 194
+      margin: 0
+      width: "${1.5 * width}"
+      brightness: 1.0
+      glow: 0.3
+      glow_width: "${6 * width}"
+      sag: "${sag}"
+      wave: "${wave}"
+      waves: "${int(waves)}"
+      flow: "${int(flow)}"
+      pulses: "${int(pulses)}"
+      pulse_brightness: 1.6
+      flare: 0.7
+      flare_radius: 6
+  - id: motes
+    effect: particles
+    attach: {layer: target}
+    anchor: {px: [0, 0]}
+    params: {period: 2.0, count: 10, shape: circle, radius: 10, direction: radial, speed_min: 6, speed_max: 18,
+             laps_min: 2, laps_max: 3, size: 1.1, brightness: 1.1, style: dot, twinkle: 0.5, extent: 40}

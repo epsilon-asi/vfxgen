@@ -1,0 +1,67 @@
+vfxgen: 1
+name: frost_shard_impact
+description: "Frost shard impact: the dart shatters into tumbling ice splinters under a frost ring, with a cold flash, twinkling sparkles and a puff of freezing mist. Pivot on the impact point."
+size: [224, 224]
+fps: 24
+duration: 0.8
+loop: false
+blend: alpha
+pivot: {px: [120, 112]}
+anchors: {impact: [120, 112]}
+events:
+  - {name: impact, t: 0.0, data: {radius: 50}}
+vars:
+  colors: {default: frost, doc: main colour ramp (shared by the frost_shard family)}
+  ice_palette: {default: ice, doc: shard facet colours (shadow -> lit)}
+  mist_palette: {default: steam, doc: mist colours (shadow -> lit)}
+  head_size: {default: 1.0, min: 0.5, max: 1.5, doc: shard size multiplier (match launch and travel)}
+  radius: {default: 1.0, min: 0.4, max: 1.4, doc: burst size multiplier}
+  splinters: {default: 16, min: 0, max: 60, doc: ice splinters}
+  sparkles: {default: 16, min: 0, max: 80, doc: twinkling sparkles riding the ring}
+  mist: {default: 1.0, min: 0, max: 3, doc: "freezing mist density (0 = off)"}
+  glow: {default: 1.0, min: 0, max: 3, doc: light exposure}
+channels:
+  mist: {kind: smoke, palette: "${mist_palette}", density: 0.75, shadow: 0.35, size_ref: 224}
+  shards: {kind: solid, palette: "${ice_palette}"}
+  light: {kind: light, palette: "${colors}", bloom: [[1.2, 0.45], [4.5, 0.4], [14, 0.3]],
+          exposure: "${1.1 * glow}", alpha_gamma: 0.9}
+layers:
+  - id: shard
+    effect: projectile_core
+    at: [120, 112]
+    anchor: head
+    length: 0.05
+    channels: {solid: shards}
+    params: {period: 1.0, style: shard, radius: "${16 * head_size}", thickness: 0.4, core: 0.9, rim: 0.9,
+             halo: 0.22, halo_radius: 1.6, spin: 2, pulse: 0.0, pulse_cycles: 0}
+  - id: mist
+    effect: frost_mist
+    enabled: "${mist > 0}"
+    at: [120, 112]
+    params: {duration: 0.8, amount: "${mist}", count: 40, radius_start: 6, radius_end: "${58 * radius}",
+             expand_time: 0.12, rise: 10, puff_min: 4, puff_max: 9, noise_scale: 12}
+  - id: flash
+    effect: flash
+    at: [120, 112]
+    anchor: {px: [0, 0]}
+    params: {duration: 0.3, radius: 6, grow: 90, brightness: 2.6, decay: 0.05, afterglow_radius: "${20 * radius}",
+             afterglow_brightness: 0.5, afterglow_decay: 0.1}
+  - id: ring
+    effect: shockwave
+    at: [120, 112]
+    anchor: {px: [0, 0]}
+    params: {duration: 0.4, radius_start: 6, radius_end: "${66 * radius}", expand_time: 0.1, width_start: 2.5,
+             width_end: 1.5, brightness: 0.9, fade_time: 0.08, breakup: 0.6, haze: 0.0}
+  - id: splinters
+    effect: ice_shards
+    at: [120, 112]
+    channels: {solid: shards}
+    scale: "${0.42 * radius}"
+    params: {duration: 0.7, shard_count: 7, small_shards: "${int(splinters)}", shard_size: 0.9, spread: 0.9,
+             max_distance: 170, edge: 1.0}
+  - id: sparkles
+    effect: ring_glints
+    at: [120, 112]
+    anchor: {px: [0, 0]}
+    params: {duration: 0.75, count: "${int(sparkles)}", radius_start: 6, radius_end: "${60 * radius}",
+             expand_time: 0.12, start_min: 0.04, start_max: 0.4, size_min: 3, size_max: 7, brightness: 2.0}

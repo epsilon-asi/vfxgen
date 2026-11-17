@@ -1,0 +1,47 @@
+vfxgen: 1
+name: buff_aura
+description: "Buff / power-up aura (loop, no sprite): a rising column of light on a glowing ground ring, golden up-arrows floating up and plus glints. Pivot at the character's feet (sized for a ~128 px tall character)."
+size: [176, 224]
+fps: 16
+duration: 2.0
+loop: true
+blend: alpha
+pivot: {px: [88, 200]}
+anchors: {feet: [88, 200]}
+vars:
+  colors: {default: holy, doc: "light colour ramp (column, ring, glints)"}
+  arrow_color: {default: "#ffcf3a", doc: colour of the up arrows}
+  body_height: {default: 1.0, min: 0.5, max: 1.2, doc: character height multiplier (128 px = 1)}
+  column: {default: 1.0, min: 0, max: 3, doc: column brightness (0 = off)}
+  arrows: {default: 4, min: 0, max: 12, doc: arrows per loop}
+  glints: {default: 10, min: 0, max: 60, doc: plus glints}
+  intensity: {default: 1.0, min: 0.2, max: 3, doc: overall light brightness}
+channels:
+  solid: {kind: solid}
+  light: {kind: light, palette: "${colors}", bloom: [[1.5, 0.45], [5, 0.4], [12, 0.25]], exposure: "${intensity}", alpha_gamma: 0.85}
+layers:
+  - id: column
+    effect: light_column
+    at: [88, 200]
+    anchor: {px: [0, 0]}
+    enabled: "${column > 0}"
+    params: {period: 2.0, style: aura, width: 40, height: "${150 * body_height}", brightness: "${0.55 * column}",
+             top_fade: -1, fade_power: 1.4, ground_squash: 0.3, rise: 2, streak_x: 8, streak_y: 40, pulse: 0.12,
+             pulse_cycles: 2}
+  - {id: ring, effect: ring, at: [88, 200], params: {period: 2.0, radius: 42, width: 1.6, brightness: 1.1, squash: 0.3, pulse: 0.15, pulse_cycles: 2}}
+  - {id: ring_soft, effect: ring, at: [88, 200], params: {period: 2.0, radius: 42, width: 6, brightness: 0.35, squash: 0.3, pulse: 0.15, pulse_cycles: 2}}
+  - id: arrows
+    effect: glyph
+    at: [88, "${200 - 40 * body_height}"]
+    anchor: {px: [0, 0]}
+    params: {period: 2.0, symbol: arrow_up, count: "${int(arrows)}", laps: 1, phases: even, spread_x: 34,
+             spread_y: "${24 * body_height}", rise: "${70 * body_height}", accel: 0.8, drift: 0, drift_var: 0, sway: 0,
+             size_start: 12, size_end: 16, size_var: 0.15, tilt: 0, wobble: 0, fade_in: 0.25, fade_out: 0.35,
+             outline: 1.1, glow: 0.6, glyph_palette: "${arrow_color}"}
+  - id: glints
+    effect: particles
+    at: [88, 200]
+    anchor: {px: [0, 0]}
+    params: {period: 2.0, count: "${int(glints)}", shape: box, radius: 36, radius_y: 8, angle: -90, spread: 0,
+             speed_min: "${50 * body_height}", speed_max: "${90 * body_height}", laps_min: 1, laps_max: 2, style: plus,
+             size: 1.6, brightness: 2.2, fade_in: 0.4, fade_out: 0.9, halo: 0.1, extent: 190}

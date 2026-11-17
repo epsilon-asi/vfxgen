@@ -1,0 +1,65 @@
+vfxgen: 1
+name: ground_slam
+description: Side-view ground impact - cracks and crater, squashed shockwave, billowing dust cloud, arcing rock debris that bounces.
+size: [384, 256]
+fps: 24
+duration: "${duration}"
+vars:
+  colors: {default: dust, doc: main colour ramp - the dust cloud (shadow -> lit)}
+  rock_palette: {default: rock, doc: "rock/crack colours (0 crack, 0.15 rock shadow, 0.6 rock lit, 1 crack lip)"}
+  flash_palette: {default: impact, doc: "colour ramp of the impact flash, shockwave and crack glow"}
+  duration: {default: 1.25, min: 0.4, max: 4, doc: seconds covered by the animation}
+  crack_count: {default: 9, min: 0, max: 30, doc: radial ground cracks (some get a side branch)}
+  crack_length: {default: 1.0, min: 0.2, max: 2.3, doc: crack length multiplier}
+  dust_amount: {default: 1.0, min: 0, max: 3, doc: dust cloud density (0 = no cloud)}
+  dust_spread: {default: 1.0, min: 0, max: 2, doc: how far the dust rolls out sideways}
+  dust_rise: {default: 1.0, min: 0, max: 2, doc: how high the central dust column climbs}
+  rocks: {default: 20, min: 0, max: 120, doc: rock chunks thrown up}
+  pebbles: {default: 40, min: 0, max: 300, doc: small dirt specks thrown up}
+  rock_size: {default: 1.0, min: 0.2, max: 3, doc: rock chunk size multiplier}
+  launch: {default: 1.0, min: 0, max: 2, doc: debris launch speed multiplier}
+  gravity: {default: 1.0, min: 0.05, max: 4, doc: gravity multiplier for debris}
+  shockwave: {default: true, doc: draw the squashed ground shockwave (light + dust ring)}
+  flash: {default: true, doc: draw the impact flash and hot crack glow}
+channels:
+  dust: {kind: volume, palette: "${colors}", density: 1.1, bump: 40, soft: 1.5, shadow: 0.3, wrap: 0.6,
+         size_ref: 384}
+  under: {kind: solid, palette: "${rock_palette}"}
+  light: {kind: light, palette: "${flash_palette}", bloom: [[1.5, 0.5], [6, 0.4]], exposure: 1.0,
+          alpha_gamma: 0.85}
+  over: {kind: solid, palette: "${rock_palette}"}
+layers:
+  - id: dust
+    effect: dust_cloud
+    at: [192, 204]
+    anchor: {px: [0, 0]}
+    channels: {volume: dust}
+    params: {duration: "${duration}", amount: "${dust_amount}", spread: "${dust_spread}", rise: "${dust_rise}",
+             puffs: "${64 if dust_amount > 0 else 0}", ring: "${0.55 if shockwave else 0}"}
+  - id: cracks
+    effect: ground_cracks
+    at: [192, 204]
+    anchor: {px: [0, 0]}
+    channels: {solid: under, light: light}
+    params: {duration: "${duration}", crack_count: "${crack_count}", crack_length: "${crack_length}",
+             glow: "${0.9 if flash else 0}"}
+  - id: flash
+    effect: flash
+    enabled: "${flash}"
+    at: [192, 200]
+    anchor: {px: [0, 0]}
+    params: {duration: 0.3, radius: 8, grow: 60, brightness: 2.4, decay: 0.045, afterglow_radius: 0}
+  - id: shockwave
+    effect: shockwave
+    enabled: "${shockwave}"
+    at: [192, 204]
+    anchor: {px: [0, 0]}
+    params: {duration: 0.6, radius_start: 10, radius_end: 175, expand_time: 0.13, width_start: 1.2,
+             width_end: 3.6, brightness: 0.25, fade_time: 0.1, squash: 0.26}
+  - id: rocks
+    effect: rocks
+    at: [192, 204]
+    anchor: {px: [0, 0]}
+    channels: {solid: over}
+    params: {duration: "${duration}", rocks: "${rocks}", pebbles: "${pebbles}", rock_size: "${rock_size}",
+             launch: "${launch}", gravity: "${1100 * max(gravity, 0.05)}"}

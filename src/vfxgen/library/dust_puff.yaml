@@ -1,0 +1,72 @@
+vfxgen: 1
+name: dust_puff
+description: Landing / impact dust puff rolling out along the ground and settling, with a few thrown grains.
+size: [256, 256]
+fps: 22
+duration: "${duration}"
+loop: false
+anchors: {impact: [128, 179.2]}
+vars:
+  colors: {default: dust, doc: dust colour ramp (shadow -> lit)}
+  puffs: {default: 34, min: 1, max: 120, doc: number of dust puffs}
+  spread: {default: 1.0, min: 0.2, max: 1.5, doc: how far the dust rolls sideways}
+  height: {default: 1.0, min: 0, max: 2, doc: how high the dust billows}
+  density: {default: 1.0, min: 0, max: 4, doc: dust opacity multiplier}
+  duration: {default: 0.9, min: 0.2, max: 4, doc: seconds the effect lasts (puff life and grain time scale with it; speeds and drag are absolute)}
+  pebbles: {default: 14, min: 0, max: 100, doc: number of small grains thrown up (0 = off)}
+  symmetric: {default: true, doc: "true = spreads both ways; false = mostly to the right"}
+channels:
+  smoke: {kind: smoke, palette: "${colors}", density: 6.0, shadow: 0.9, ambient: 0.25, relief: 1.6,
+          height_gain: 0.3, size_ref: 256}
+# legacy samples t = duration * (0.07 + 0.93 u^1.25) ~= duration * (0.1196 + 0.8804 u)^1.25: power warp,
+# started early and slowed slightly so frame 0 is at 0.07 * duration and the last frame at duration
+layers:
+  - id: dust
+    effect: smoke_burst
+    at: [128, 179.2]
+    anchor: origin
+    start: "${-0.1358 * duration}"
+    speed: 0.8804
+    time_warp: &warp {curve: power, exp: 1.25}
+    params:
+      duration: "${duration}"
+      mode: burst
+      count: "${int(puffs)}"
+      spread: "${400 * spread}"
+      spread_start: 0
+      drag: 4.5
+      lateral_min: 0.03
+      forward: "${0.5 if symmetric else 0.85}"
+      lift: "${110 * height}"
+      rise: "${10 * height}"
+      ground: true
+      extent: "${108 * max(spread, 0.3)}"
+      radius_start: 13
+      radius_end: 31
+      radius_var: 0.23
+      life_min: "${0.72 * duration}"
+      life_max: "${0.85 * duration}"
+      stagger: 0.04
+      fade_in: 0.03
+      fade_out: 0.35
+      density: "${0.24 * density}"
+      billow: 0.8
+      wisp_start: 0.15
+      wispiness: 0.5
+      spin: 1.5
+  - id: pebbles
+    effect: pebbles
+    at: [128, 179.2]
+    anchor: {px: [0, 0]}
+    start: "${-0.1358 * duration}"
+    speed: 0.8804
+    time_warp: *warp
+    params:
+      duration: "${duration}"
+      count: "${int(pebbles)}"
+      speed_x: "${110 * spread}"
+      speed_min: "${120 * height}"
+      speed_max: "${420 * height}"
+      gravity: 1500
+      brightness: "${3.0 * density}"
+      visible: "${0.7 * duration}"

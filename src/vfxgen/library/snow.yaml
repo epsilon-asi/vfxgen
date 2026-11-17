@@ -1,0 +1,40 @@
+vfxgen: 1
+name: snow
+description: Gentle snowfall - soft flakes of different depths drifting down, swaying and swirling on slow eddies.
+size: [256, 256]
+fps: 16
+duration: 4.0
+loop: true
+blend: alpha
+pivot: center
+vars:
+  colors: {default: snow, doc: flake colour ramp (faint -> bright)}
+  density: {default: 110, min: 0, max: 500, doc: number of flakes}
+  speed: {default: 1.0, min: 0.3, max: 3, doc: fall speed multiplier}
+  wind: {default: 8, min: -80, max: 80, doc: sideways drift (px/s; negative = to the left)}
+  sway: {default: 1.0, min: 0, max: 3, doc: sideways sway amount}
+  swirl: {default: 1.0, min: 0, max: 4, doc: strength of the swirling eddies (0 = straight paths)}
+  size: {default: 1.0, min: 0.3, max: 3, doc: flake size multiplier}
+  brightness: {default: 1.0, min: 0, max: 4, doc: flake intensity multiplier}
+  depth: {default: 0.6, min: 0, max: 1, doc: "depth spread (far flakes smaller, slower, dimmer)"}
+channels:
+  light: {kind: light, palette: "${colors}", bloom: [[1.2, 0.3], [4, 0.15]], exposure: 1.0, alpha_gamma: 0.8}
+layers:
+  - id: snow
+    effect: snowfall
+    at: [128, 128]
+    anchor: {px: [0, 0]}
+    params:
+      period: 4.0
+      width: 256
+      height: 256
+      count: "${int(density)}"
+      speed: "${55 * speed}"
+      wind: "${wind}"
+      sway: "${8 * sway}"
+      curl: "${16 * swirl}"
+      curl_scale: 55
+      size: "${1.3 * size}"
+      brightness: "${1.6 * brightness}"
+      depth: "${depth}"
+      edge: 20

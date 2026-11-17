@@ -1,0 +1,39 @@
+vfxgen: 1
+name: orb
+description: Energy orb with a hot core inside wobbling harmonic shells, with orbiting motes.
+size: [256, 256]
+fps: 16
+duration: 1.0
+loop: true
+vars:
+  colors: {default: arcane, doc: main colour ramp}
+  intensity: {default: 1.0, min: 0, max: 4, doc: overall brightness (exposure)}
+  core: {default: 1.0, min: 0, max: 4, doc: brightness of the central core}
+  shells: {default: 3, min: 0, max: 12, doc: number of wobbling energy shells}
+  wobble: {default: 1.0, min: 0, max: 3, doc: shell shape distortion multiplier}
+  motes: {default: 14, min: 0, max: 200, doc: "number of orbiting motes (0 = none)"}
+  orbit: {default: 1.0, min: 0.2, max: 1.2, doc: mote orbit radius multiplier}
+  pulse: {default: 0.07, min: 0, max: 0.5, doc: "size pulse amplitude (0 = steady)"}
+  spin: {default: 1, min: -4, max: 4, doc: "whole-number speed of shells and motes (cycles per loop; 0 = frozen)"}
+  glow: {default: 1.0, min: 0, max: 3, doc: bloom strength}
+channels:
+  light: {kind: light, palette: "${colors}", exposure: "${intensity}",
+          bloom: [[3, "${0.6 * glow}"], [8, "${0.6 * glow}"], [22, "${0.55 * glow}"]], alpha_gamma: 0.85}
+layers:
+  - id: core
+    effect: glow
+    at: [128, 128]
+    params: {period: 1.0, radius: 12.73, brightness: "${3.0 * core}", halo_radius: 33.9,
+             halo_brightness: "${0.55 * core}", pulse: "${min(pulse * 2, 1)}", pulse_cycles: 1}
+  - id: shells
+    effect: wobble_shells
+    at: [128, 128]
+    params: {period: 1.0, shells: "${shells}", radius: 52, wobble: "${wobble}", width: 2.2,
+             pulse: "${pulse}", spin: "${spin}"}
+  - id: motes
+    effect: orbiters
+    at: [128, 128]
+    params: {period: 1.0, count: "${motes}", radius_min: "${80 * orbit}", radius_max: "${104 * orbit}",
+             squash_min: 0.2, squash_max: 0.9, speeds: "1,1,-1,2", spin: "${spin}", trail: 0.55,
+             trail_points: 10, trail_width: 0.6, head_width: 2.0, head_size: 2.6, brightness_min: 0.8,
+             brightness_max: 1.6, trail_brightness: 1.4, head_brightness: 1.0, depth: 0.6}

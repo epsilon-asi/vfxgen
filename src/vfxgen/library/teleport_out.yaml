@@ -1,0 +1,40 @@
+vfxgen: 1
+name: teleport_out
+description: "Teleport out: the sprite charges up, squeezes into a stretched sliver that splits into scanlines vanishing bottom-up, and leaves as a beam of light with rising sparks."
+size: [176, 372]
+fps: 24
+duration: 0.9
+loop: false
+blend: alpha
+pivot: {px: [88, 330]}
+anchors: {feet: [88, 330]}
+vars:
+  colors: {default: "#62d0ff", doc: "teleport colour (charge flash, glow, beam, sparks)"}
+  image: {default: hero.png, doc: "sprite image (PNG with alpha)"}
+  height: {default: 128, min: 16, max: 150, doc: displayed sprite height (px)}
+  stretch: {default: 0.8, min: 0, max: 1.0, doc: vertical stretch at the peak (1 = twice as tall)}
+  squeeze: {default: 0.9, min: 0, max: 1, doc: horizontal squeeze at the peak}
+  lines: {default: 18, min: 1, max: 64, doc: number of scanline slices}
+  jitter: {default: 8, min: 0, max: 30, doc: sideways slice jitter (px)}
+  beam: {default: 1.0, min: 0, max: 3, doc: beam brightness (0 = off)}
+  sparks: {default: 40, min: 0, max: 300, doc: number of sparks}
+  glow: {default: 1.0, min: 0, max: 3, doc: overall glow brightness}
+events: [{name: start, t: 0.0}, {name: vanish, t: 0.63}]
+channels:
+  solid: {kind: solid}
+  light: {kind: light, palette: "${colors}", bloom: [[1.5, 0.5], [5, 0.45], [14, 0.25]], exposure: 1.0, alpha_gamma: 0.8}
+layers:
+  - id: sprite
+    effect: sprite
+    at: [88, 330]
+    anchor: {px: [0, 0]}
+    params: {mode: teleport_out, duration: 0.9, image: "${image}", height: "${height}", flash_palette: "${colors}",
+             strength: 0.9, stretch: "${stretch}", squeeze: "${squeeze}", lines: "${lines}", jitter: "${jitter}",
+             beam: "${beam}", embers: "${sparks}", glow: "${glow}", glow_radius: 5}
+  - id: ring
+    effect: shockwave
+    start: 0.58
+    at: [88, 330]
+    anchor: {px: [0, 0]}
+    params: {duration: 0.3, radius_start: 6, radius_end: 58, expand_time: 0.08, width_start: 2.5, width_end: 1.5,
+             brightness: "${0.9 * glow}", fade_time: 0.1, squash: 0.28}

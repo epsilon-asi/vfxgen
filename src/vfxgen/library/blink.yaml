@@ -1,0 +1,91 @@
+vfxgen: 1
+name: blink
+description: "Blink / teleport: the body's light pinches into a vertical streak and bursts away in particles (vanish), then motes rush back in and pop into a flash with a ground ring (appear). Pivot on the feet; play at both ends of a teleport or use the events to switch the sprite."
+size: [192, 224]
+fps: 24
+duration: 0.75
+loop: false
+blend: additive
+pivot: {px: [96, 176]}
+anchors: {feet: [96, 176], body: [96, 128]}
+events:
+  - {name: vanish, t: 0.1}
+  - {name: appear, t: 0.42}
+vars:
+  colors: {default: "#5fd0ff", doc: main colour ramp}
+  height: {default: 1.0, min: 0.5, max: 1.5, doc: body height multiplier (streak and particle column)}
+  particles: {default: 36, min: 0, max: 150, doc: particles flying off on vanish}
+  motes: {default: 30, min: 0, max: 120, doc: motes rushing in before the appear pop}
+  brightness: {default: 1.0, min: 0, max: 3, doc: brightness multiplier}
+channels:
+  light: {kind: light, palette: "${colors}", bloom: [[1.5, 0.5], [5, 0.45], [16, 0.35]],
+          exposure: "${brightness}", alpha_gamma: 0.8}
+layers:
+  # --- vanish ------------------------------------------------------------------
+  - id: pinch
+    effect: anamorphic_streak
+    at: [96, 128]
+    rotate: 90
+    start: 0.02
+    scale: {keys: [[0, [1.0, 1.0]], [0.2, [0.6, 3.0]]]}
+    params: {duration: 0.22, length: "${50 * height}", width: 3.0, thin: 0.4, brightness: 1.2, flash: 1.6,
+             decay: 0.06, sustain: 0.3}
+  - id: out_flash
+    effect: flash
+    at: [96, 128]
+    anchor: {px: [0, 0]}
+    start: 0.08
+    params: {duration: 0.25, radius: 6, grow: 60, brightness: 2.2, decay: 0.05, afterglow_radius: 22,
+             afterglow_brightness: 0.4, afterglow_decay: 0.08}
+  - id: out_particles
+    effect: burst
+    at: [96, 128]
+    anchor: {px: [0, 0]}
+    start: 0.08
+    params: {duration: 0.34, count: "${int(particles)}", shape: ellipse, radius: 12, radius_y: "${36 * height}",
+             direction: radial, speed_min: 80, speed_max: 220, drag: 5, gravity: -120, life_min: 0.18,
+             life_max: 0.32, style: streak, tail: 0.04, size: 0.9, brightness: 1.5, fade_in: 0, fade_out: 1.2,
+             extent: 95}
+  - id: out_ring
+    effect: shockwave
+    at: [96, 176]
+    anchor: {px: [0, 0]}
+    start: 0.08
+    params: {duration: 0.3, radius_start: 6, radius_end: 48, expand_time: 0.08, width_start: 2, width_end: 1,
+             brightness: 0.8, fade_time: 0.1, squash: 0.28}
+  # --- appear -------------------------------------------------------------------
+  - id: in_motes
+    effect: inflow
+    at: [96, 128]
+    start: 0.2
+    scale: [0.55, "${0.75 * height}"]
+    params: {duration: 0.3, count: "${int(motes)}", radius_min: 70, radius_max: 100, swirl: 0.6, trail: 0.4,
+             life_min: 0.35, life_max: 0.55, brightness: 1.2, core: 0.6, rings: 0, pop_at: 0.75, pop: true}
+  - id: in_flash
+    effect: flash
+    at: [96, 128]
+    anchor: {px: [0, 0]}
+    start: 0.42
+    params: {duration: 0.3, radius: 8, grow: 70, brightness: 2.6, decay: 0.05, afterglow_radius: 26,
+             afterglow_brightness: 0.5, afterglow_decay: 0.1}
+  - id: in_streak
+    effect: anamorphic_streak
+    at: [96, 128]
+    rotate: 90
+    start: 0.42
+    params: {duration: 0.3, length: "${56 * height}", width: 2.6, thin: 0.3, brightness: 1.1, flash: 1.6,
+             decay: 0.06, sustain: 0.2}
+  - id: in_ring
+    effect: shockwave
+    at: [96, 176]
+    anchor: {px: [0, 0]}
+    start: 0.42
+    params: {duration: 0.32, radius_start: 4, radius_end: 56, expand_time: 0.08, width_start: 2.4, width_end: 1,
+             brightness: 1.0, fade_time: 0.1, squash: 0.28}
+  - id: in_glints
+    effect: glints
+    at: [96, 128]
+    start: 0.42
+    time_mode: once
+    params: {period: 0.32, mode: burst, count: 6, spread: 46, size: 0.45, brightness: 1.2, flash: 1.0,
+             sustain: 1.0}

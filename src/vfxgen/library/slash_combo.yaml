@@ -1,0 +1,93 @@
+vfxgen: 1
+name: slash_combo
+description: Three crossing sword slashes in quick succession (an X-cross, then a wide finisher) with sparks, speed lines and a cross flash as each blade passes the centre.
+size: [384, 384]
+fps: 24
+duration: "${interval * (2.12 if slash_count >= 3 else slash_count - 1) + slash_duration + 0.12}"
+vars:
+  colors: {default: steel, doc: main colour ramp}
+  slash_count: {default: 3, choices: [1, 2, 3], doc: "number of slashes (X-cross, then the finisher)"}
+  interval: {default: 0.17, min: 0.02, max: 1, doc: seconds between slash starts}
+  slash_duration: {default: 0.36, min: 0.1, max: 2, doc: seconds each slash lives}
+  radius: {default: 1.0, min: 0.3, max: 1.08, doc: arc radius multiplier}
+  thickness: {default: 1.0, min: 0.2, max: 3, doc: crescent thickness multiplier}
+  arc_angle: {default: 165.0, min: 30, max: 300, doc: degrees of arc each blade sweeps}
+  sparks: {default: 26, min: 0, max: 120, doc: sparks shed per slash}
+  speed_lines: {default: 7, min: 0, max: 40, doc: speed lines per slash}
+  edge: {default: 1.0, min: 0, max: 4, doc: brightness of the hot cutting edges}
+  glow: {default: 1.0, min: 0, max: 4, doc: overall light exposure}
+  cross_flash: {default: true, doc: glint flash at the blade midpoint as each slash passes}
+  angle_jitter: {default: 7.0, min: 0, max: 90, doc: "random rotation per slash, +/- degrees"}
+channels:
+  light: {kind: light, palette: "${colors}", bloom: [[1.2, 0.5], [4, 0.45], [13, 0.32]],
+          exposure: "${1.2 * glow}", alpha_gamma: 0.9}
+layers:
+  - id: slash1
+    effect: crescent_slash
+    at: [192, 192]
+    anchor: {px: [0, 0]}
+    params: &slash
+      duration: "${slash_duration}"
+      radius: "${min(140 * radius, 168)}"
+      thickness: "${50 * thickness}"
+      arc_angle: "${arc_angle}"
+      squash: 0.55
+      angle: 42.97
+      angle_jitter: "${angle_jitter}"
+      flip: 0
+      through: 0.65
+      edge: "${edge}"
+      brightness: "${1.15 if slash_count == 1 else 1.0}"
+      speed_lines: "${speed_lines}"
+      sparks: "${sparks}"
+      spark_delay: 0.18
+      spark_speed_min: 140
+      spark_speed_max: 380
+      spark_life_min: 0.18
+      spark_life_max: 0.34
+      spark_gravity: 380
+      spark_width: 0.7
+      spark_brightness: 1.8
+  - id: slash2
+    effect: crescent_slash
+    enabled: "${slash_count >= 2}"
+    start: "${interval}"
+    at: [192, 192]
+    anchor: {px: [0, 0]}
+    params:
+      <<: *slash
+      angle: 137.03
+      brightness: "${1.15 if slash_count == 2 else 1.0}"
+  - id: slash3
+    effect: crescent_slash
+    enabled: "${slash_count >= 3}"
+    start: "${2.12 * interval}"
+    at: [192, 192]
+    anchor: {px: [0, 0]}
+    params:
+      <<: *slash
+      radius: "${min(155 * radius, 168)}"
+      thickness: "${58 * thickness}"
+      squash: 0.42
+      angle: 0
+      flip: -1
+      through: 0.4
+      brightness: 1.15
+  - id: flash1
+    effect: cross_flash
+    enabled: "${cross_flash}"
+    start: "${0.12 * slash_duration}"
+    attach: {layer: slash1, anchor: mid_arc}
+    params: &flash {duration: 0.25, length: 16, grow: 140, brightness: 1.6, decay: 0.05, angle: 77.4, width: 1.3}
+  - id: flash2
+    effect: cross_flash
+    enabled: "${cross_flash and slash_count >= 2}"
+    start: "${interval + 0.12 * slash_duration}"
+    attach: {layer: slash2, anchor: mid_arc}
+    params: {<<: *flash, brightness: 2.2, angle: 171.4}
+  - id: flash3
+    effect: cross_flash
+    enabled: "${cross_flash and slash_count >= 3}"
+    start: "${2.12 * interval + 0.12 * slash_duration}"
+    attach: {layer: slash3, anchor: mid_arc}
+    params: {<<: *flash, brightness: 2.2, angle: 34.4}

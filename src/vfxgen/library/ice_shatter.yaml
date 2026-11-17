@@ -1,0 +1,100 @@
+vfxgen: 1
+name: ice_shatter
+description: Ice crystal shows glowing cracks, then breaks into tumbling flat-shaded shards with glitter and a puff of cold mist.
+size: [256, 256]
+fps: 24
+duration: "${crack_time + 0.6}"
+vars:
+  colors: {default: frost, doc: "main colour ramp (cracks, edges, glitter)"}
+  ice_palette: {default: ice, doc: crystal facet colours (shadow -> lit)}
+  mist_palette: {default: steam, doc: mist colours (shadow -> lit)}
+  pieces: {default: 9, min: 3, max: 30, doc: wedges the crystal splits into (each also splits in two)}
+  crystal_size: {default: 1.0, min: 0.3, max: 1.66, doc: crystal size multiplier}
+  burst: {default: 1.0, min: 0, max: 3, doc: shard launch speed multiplier}
+  gravity: {default: 1.0, min: 0, max: 4, doc: gravity multiplier}
+  glitter: {default: 36, min: 0, max: 300, doc: number of glitter sparkles}
+  crack_time: {default: 0.083, min: 0, max: 1, doc: seconds the intact crystal shows cracks before breaking}
+  mist_amount: {default: 1.0, min: 0, max: 3, doc: cold mist puff density (0 = off)}
+  glow: {default: 1.0, min: 0, max: 4, doc: "light exposure for edges, cracks and glitter"}
+channels:
+  mist: {kind: smoke, palette: "${mist_palette}", density: 0.8, shadow: 0.2, size_ref: 256}
+  ice: {kind: solid, palette: "${ice_palette}"}
+  light: {kind: light, palette: "${colors}", bloom: [[1, 0.45], [4, 0.4], [11, 0.25]],
+          exposure: "${1.1 * glow}", alpha_gamma: 0.9}
+layers:
+  - id: crystal
+    effect: crystal_shatter
+    at: [128, 124]
+    anchor: {px: [0, 0]}
+    channels: {solid: ice, light: light}
+    params:
+      duration: "${crack_time + 0.6}"
+      crack_time: "${crack_time}"
+      pieces: "${pieces}"
+      width: "${min(54 * crystal_size, 90)}"
+      height: "${min(108 * crystal_size, 180)}"
+      burst: "${burst}"
+      gravity: "${380 * gravity}"
+  - id: flash
+    effect: flash
+    start: "${crack_time}"
+    at: [128, 124]
+    anchor: {px: [0, 0]}
+    params: {duration: 0.3, radius: 12, grow: 80, brightness: 2.2, decay: 0.05, afterglow_radius: 0}
+  - id: glitter
+    effect: burst
+    start: "${crack_time}"
+    at: [128, 124]
+    anchor: {px: [0, 0]}
+    params:
+      duration: 0.6
+      count: "${glitter}"
+      shape: box
+      radius: "${22 * min(crystal_size, 1.66)}"
+      radius_y: "${38 * min(crystal_size, 1.66)}"
+      speed_min: "${10 * burst}"
+      speed_max: "${100 * burst}"
+      gravity: "${95 * gravity}"
+      stagger: 0.21
+      life_min: 0.09
+      life_max: 0.18
+      style: glint
+      size: 1.0
+      brightness: 2.0
+      brightness_var: 0.2
+      fade_in: 0.5
+      fade_out: 2.0
+      extent: 120
+  - id: mist
+    effect: frost_mist
+    start: "${crack_time}"
+    at: [128, 124]
+    anchor: {px: [0, 0]}
+    channels: {smoke: mist}
+    params:
+      duration: 0.6
+      amount: "${mist_amount}"
+      count: "${10 if mist_amount > 0 else 0}"
+      layout: even
+      radius_start: 10
+      radius_end: 60
+      expand: linear
+      k_max: 1.0
+      squash: 0.6
+      rise: 10
+      puff_min: 10
+      puff_max: 10
+      grow_start: 1.0
+      grow: 1.8
+      density_min: 0.12
+      density_max: 0.12
+      fade_in: 0.1
+      fade_out_start: 0.35
+      fade_out_end: 1.0
+      noise_scale: 20
+      noise_grow: 0
+      noise_speed: 2
+      erosion_floor: 0.3
+      erosion_gain: 1.1
+      erosion_lo: -0.5
+      erosion_hi: 0.5

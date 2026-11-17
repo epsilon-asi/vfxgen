@@ -1,0 +1,72 @@
+vfxgen: 1
+name: fire_bolt_launch
+description: "Fire bolt cast: a flame burst and fiery launch rings at the muzzle while the bolt's head forms and darts out to the spawn point, sparks and a puff of smoke. Faces +x; pivot on the muzzle."
+size: [192, 160]
+fps: 24
+duration: 0.5
+loop: false
+blend: alpha
+pivot: {px: [40, 80]}
+anchors: {muzzle: [40, 80], spawn: [72, 80]}
+events:
+  - {name: spawn_projectile, t: 0.16, data: {offset: [32, 0], effect: fire_bolt_travel}}
+vars:
+  colors: {default: fire, doc: main colour ramp (shared by the fire_bolt family)}
+  smoke_palette: {default: smoke, doc: smoke puff colours (shadow -> lit)}
+  head_size: {default: 1.0, min: 0.5, max: 1.5, doc: head size multiplier (match travel and impact)}
+  intensity: {default: 1.0, min: 0, max: 3, doc: brightness multiplier}
+  sparks: {default: 14, min: 0, max: 60, doc: forward sparks}
+  smoke: {default: 1.0, min: 0, max: 3, doc: "smoke puff density (0 = off)"}
+channels:
+  smoke: {kind: smoke, palette: "${smoke_palette}", density: 4.0, shadow: 0.7, ambient: 0.35, relief: 1.0,
+          height_gain: 0.8, size_ref: 192, lit_by: {channels: [light], amount: 0.6}}
+  light: {kind: light, palette: "${colors}", exposure: 0.95, alpha_gamma: 0.65,
+          bloom: [[1.5, 0.3], [6, 0.28], [18, 0.2]]}
+layers:
+  - id: wisp
+    effect: smoke_burst
+    enabled: "${smoke > 0}"
+    at: [50, 80]
+    anchor: origin
+    start: 0.05
+    params: {duration: 0.45, mode: burst, count: 6, spread: 160, spread_start: 30, drag: 5, lateral_min: 0.0,
+             forward: 0.8, lift: 20, rise: 16, spawn_y: 4, ground: false, extent: 0, radius_start: 5,
+             radius_end: 13, radius_var: 0.25, life_min: 0.32, life_max: 0.4, stagger: 0.04, fade_in: 0.15,
+             fade_out: 0.4, density: "${0.14 * smoke}", billow: 0.8, wisp_start: 0.2, wispiness: 0.5, grain: 4}
+  - id: flash
+    effect: flash
+    at: [40, 80]
+    anchor: {px: [0, 0]}
+    params: {duration: 0.3, radius: 5, grow: 50, brightness: "${2.4 * intensity}", decay: 0.06,
+             afterglow_radius: 16, afterglow_brightness: "${0.5 * intensity}", afterglow_decay: 0.1}
+  - id: burst
+    effect: muzzle_burst
+    at: [40, 80]
+    anchor: muzzle
+    start: 0.1
+    params: {duration: 0.2, length: 60, petals: 7, spread: 12, petal_width: 4, spikes: 4, spike_length: 16,
+             intensity: "${0.9 * intensity}", decay: 0.05}
+  - id: rings
+    effect: muzzle_ring
+    at: [40, 80]
+    anchor: {px: [0, 0]}
+    start: 0.1
+    params: {duration: 0.32, count: 2, stagger: 0.06, radius_start: 5, radius_end: "${24 * head_size}",
+             squash: 0.35, travel: 46, offset: 6, width: 2.0, brightness: "${2.2 * intensity}"}
+  - id: head
+    effect: projectile_core
+    length: 0.2
+    fade: {out: 0.04}
+    move: {path: {line: [[42, 80], [72, 80]]}, duration: 0.16, ease: in}
+    scale: {keys: [[0, 0.3], [0.12, 1.0, out]]}
+    params: {period: 1.0, style: orb, radius: "${8 * head_size}", stretch: 1.8, brightness: "${0.8 * intensity}",
+             core: "${1.6 * intensity}", rim: 0.3, turbulence: 0.6, halo: "${0.22 * intensity}", halo_radius: 2.6,
+             spin: 3, pulse: 0.1, pulse_cycles: 6}
+  - id: sparks
+    effect: burst
+    at: [46, 80]
+    anchor: {px: [0, 0]}
+    start: 0.1
+    params: {duration: 0.35, count: "${int(sparks)}", angle: 0, spread: 70, speed_min: 180, speed_max: 360,
+             drag: 4, gravity: 200, life_min: 0.15, life_max: 0.3, style: streak, tail: 0.03, size: 0.8,
+             brightness: 1.8, fade_in: 0, fade_out: 1.4, extent: 130}

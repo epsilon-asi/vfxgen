@@ -1,0 +1,92 @@
+vfxgen: 1
+name: waterfall
+description: Waterfall - an accelerating glossy sheet of water pouring over a bright lip, churning white foam where it hits the pool, swirling mist and spray.
+size: [192, 256]
+fps: 16
+duration: 2.0
+loop: true
+blend: alpha
+pivot: base
+anchors: {base: [96, 226], lip: [96, 36]}
+vars:
+  colors: {default: water, doc: water colour ramp (deep -> lit)}
+  glint_palette: {default: glint, doc: colour of the highlights and lip}
+  foam_palette: {default: steam, doc: foam and mist colour ramp (shadow -> lit)}
+  width: {default: 1.0, min: 0.4, max: 1.6, doc: sheet width multiplier}
+  speed: {default: 1.0, min: 0.5, max: 3, doc: texture flow speed multiplier}
+  opacity: {default: 1.0, min: 0, max: 3, doc: water body opacity multiplier}
+  highlights: {default: 1.0, min: 0, max: 3, doc: glossy highlight intensity}
+  foam: {default: 1.0, min: 0, max: 3, doc: foam density at the base (0 = none)}
+  mist: {default: 1.0, min: 0, max: 3, doc: swirling mist density (0 = none)}
+  spray: {default: 26, min: 0, max: 150, doc: spray droplets thrown up at the base}
+channels:
+  water: {kind: volume, palette: "${colors}", density: 1.6, bump: 5, soft: 1.0, shadow: 0.1, wrap: 0.7, spec: 0.9,
+          spec_power: 26, rim: 0.4, size_ref: 256}
+  light: {kind: light, palette: "${glint_palette}", bloom: [[1, 0.35], [3, 0.2]], exposure: 1.0, alpha_gamma: 0.85}
+  foam: {kind: smoke, palette: "${foam_palette}", density: 2.2, shadow: 0.5, relief: 0.8, ambient: 0.45,
+         height_gain: 0.6, size_ref: 256}
+  mist: {kind: smoke, palette: "${foam_palette}", density: "${1.4 * mist}", shadow: 0.3, relief: 0.4, ambient: 0.6,
+         height_gain: 0.5, size_ref: 256}
+layers:
+  - id: cascade
+    effect: water_cascade
+    at: [96, 226]
+    anchor: base
+    channels: {volume: water, light: light, smoke: foam}
+    params:
+      period: 2.0
+      height: 190
+      width_top: "${64 * width}"
+      width_bottom: "${84 * width}"
+      flow_cycles: "${int(round(32 * speed))}"
+      density: "${0.9 * opacity}"
+      highlights: "${0.9 * highlights}"
+      foam: "${foam}"
+      foam_width: 1.6
+  - id: mist
+    effect: smoke_puffs
+    enabled: "${mist > 0}"
+    at: [96, 222]
+    anchor: origin
+    channels: {smoke: mist}
+    params:
+      mode: roll
+      period: 2.0
+      count: 16
+      spread: "${55 * width}"
+      spread_start: "${20 * width}"
+      squash: 0.35
+      rise: 34
+      radius_start: 9
+      radius_end: 24
+      density: 0.12
+      billow: 0.8
+      wisp_start: 0.18
+      wispiness: 0.5
+      fade_in: 0.2
+      fade_out: 0.4
+      curl: 30
+      curl_scale: 30
+  - id: spray
+    effect: particles
+    at: [96, 220]
+    anchor: {px: [0, 0]}
+    channels: {light: light}
+    params:
+      period: 2.0
+      count: "${int(spray)}"
+      shape: line
+      radius: "${36 * width}"
+      angle: -90
+      spread: 110
+      speed_min: 50
+      speed_max: 130
+      gravity: 420
+      laps_min: 2
+      laps_max: 4
+      style: dot
+      size: 0.7
+      brightness: 1.4
+      fade_in: 0.05
+      fade_out: 1.2
+      extent: 90

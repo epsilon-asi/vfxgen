@@ -1,0 +1,46 @@
+# A composite built from library effects, atoms and another scene file.
+vfxgen: 1
+name: storm_strike
+description: Smoke column, lightning strikes it, a nested impact ring, sparks spawning sparks, and a trail of puffs.
+size: [512, 512]
+fps: 24
+duration: 2.0
+seed: 7
+vars:
+  colors: {default: electric, doc: lightning colour}
+  strike_x: {default: 256, doc: x of the strike}
+layers:
+  - id: smoke                      # a whole library effect as one layer
+    effect: smoke
+    at: ["${strike_x}", 300]
+    scale: 1.1
+    length: 1.6
+    fade: {in: 0.2, out: 0.45}
+  - id: bolt                       # lightning on top of the smoke
+    effect: lightning
+    at: ["${strike_x}", 18]
+    anchor: top
+    start: 0.35
+    params: {colors: "${colors}"}
+  - id: ground                     # another YAML file, pinned by its own named anchor
+    effect: impact_ring.yaml
+    at: ["${strike_x}", 470]
+    anchor: ground
+    start: 0.6
+    params: {colors: "${colors}"}
+  - id: pops                       # self-spawning: each spark burst throws smaller bursts
+    effect: sparks
+    at: ["${strike_x}", 400]
+    start: 0.6
+    scale: 0.7
+    params: {colors: "${colors}"}
+    spawn: {count: 3, depth: 2, radius: 70, when: 0.12, scale: 0.55}
+  - id: trail                      # repeat over a course
+    effect: dust_puff
+    start: 0.75
+    scale: 0.45
+    repeat:
+      count: 5
+      every: 0.06
+      along: {line: [[120, 462], [392, 462]]}
+      jitter: {rotate: 12, scale: 0.15}

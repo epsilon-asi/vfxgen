@@ -1,0 +1,39 @@
+vfxgen: 1
+name: energy_tile
+description: Seamless tile of flowing plasma - twisting bright energy veins over a soft pulsing glow (tiles in space and loops in time).
+size: [256, 256]
+fps: 16
+duration: 2.0
+loop: true
+tile: true
+blend: additive
+pivot: top_left
+vars:
+  colors: {default: arcane, doc: energy colour ramp (faint -> hot)}
+  brightness: {default: 1.0, min: 0, max: 4, doc: overall intensity}
+  veins: {default: 1.0, min: 0, max: 3, doc: vein intensity}
+  glow: {default: 1.0, min: 0, max: 3, doc: background glow intensity}
+  thinness: {default: 1.0, min: 0.3, max: 3, doc: "vein thinness (higher = thinner, sharper veins)"}
+  scale: {default: 3, min: 1, max: 8, doc: noise cells across the tile (whole number; more = smaller features)}
+  flow: {default: 1, min: -4, max: 4, doc: tiles flowed sideways per loop (whole number)}
+  turbulence: {default: 1.0, min: 0, max: 3, doc: how much the veins twist (domain warp)}
+  pulse: {default: 0.15, min: 0, max: 1, doc: brightness pulse depth}
+channels:
+  light: {kind: light, palette: "${colors}", bloom: [[1.5, 0.45], [5, 0.35], [14, 0.2]], exposure: "${brightness}",
+          alpha_gamma: 0.85}
+layers:
+  - id: energy
+    effect: energy_field
+    at: [0, 0]
+    anchor: {px: [0, 0]}
+    params:
+      width: 256
+      height: 256
+      period: 2.0
+      cells: "${int(scale)}"
+      flow: "${int(flow)}"
+      warp: "${0.9 * turbulence}"
+      sharpness: "${6 * thinness}"
+      veins: "${1.4 * veins}"
+      glow: "${0.25 * glow}"
+      pulse: "${pulse}"

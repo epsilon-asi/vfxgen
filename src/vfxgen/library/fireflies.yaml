@@ -1,0 +1,40 @@
+vfxgen: 1
+name: fireflies
+description: Fireflies on a summer night - glowing motes wandering on swirling air, bobbing and blinking on and off.
+size: [256, 224]
+fps: 16
+duration: 4.0
+loop: true
+blend: additive
+pivot: center
+vars:
+  colors: {default: firefly, doc: glow colour ramp (faint -> hot)}
+  count: {default: 22, min: 0, max: 150, doc: number of fireflies}
+  wander: {default: 1.0, min: 0, max: 4, doc: how far and fast they wander (drift and swirl)}
+  blink_rate: {default: 0.9, min: 0, max: 4, doc: blinks per second}
+  sharpness: {default: 3.0, min: 1, max: 10, doc: how short and sharp each blink is}
+  size: {default: 1.0, min: 0.3, max: 3, doc: firefly size multiplier}
+  glow: {default: 1.0, min: 0, max: 3, doc: halo strength}
+  brightness: {default: 1.0, min: 0, max: 4, doc: intensity multiplier}
+channels:
+  light: {kind: light, palette: "${colors}", bloom: [[1.5, 0.5], [5, 0.45], [14, 0.3]], exposure: "${brightness}",
+          alpha_gamma: 0.8}
+layers:
+  - id: flies
+    effect: firefly_swarm
+    at: [128, 112]
+    anchor: {px: [0, 0]}
+    params:
+      period: 4.0
+      width: 220
+      height: 180
+      count: "${int(count)}"
+      laps_min: 1
+      laps_max: 2
+      drift: "${10 * wander}"
+      curl: "${22 * wander}"
+      blink_rate: "${blink_rate}"
+      blink_sharpness: "${sharpness}"
+      size: "${1.2 * size}"
+      halo: "${0.3 * glow}"
+      halo_size: "${5 * size}"

@@ -1,0 +1,35 @@
+vfxgen: 1
+name: hit_flash
+description: "Character hit flash: the sprite flashes to a solid colour with a halo, a quick squash and sideways shake, then recovers."
+size: [192, 192]
+fps: 24
+duration: 0.35
+loop: false
+blend: alpha
+pivot: {px: [96, 176]}
+anchors: {feet: [96, 176]}
+vars:
+  colors: {default: "#ffffff", doc: "flash colour (sprite fill and halo glow)"}
+  image: {default: hero.png, doc: "sprite image (PNG with alpha); library assets or a path relative to the scene"}
+  height: {default: 128, min: 16, max: 150, doc: displayed sprite height (px)}
+  strength: {default: 1.0, min: 0, max: 1, doc: how far the sprite goes to the flash colour}
+  pulses: {default: 1, min: 1, max: 4, doc: number of blinks (1 = one flash that fades)}
+  shake: {default: 3.0, min: 0, max: 12, doc: sideways hit shake (px)}
+  squash: {default: 0.12, min: 0, max: 0.4, doc: hit squash amount}
+  glow: {default: 1.0, min: 0, max: 3, doc: halo brightness}
+events:
+  - {name: hit, t: 0.0}
+  - {name: peak, t: 0.02, data: {flash: 1.0}}
+  - {name: recover, t: 0.3}
+channels:
+  solid: {kind: solid}
+  light: {kind: light, palette: "${colors}", bloom: [[2, 0.4], [6, 0.25]], exposure: 1.0, alpha_gamma: 0.8}
+layers:
+  - id: sprite
+    effect: sprite
+    at: [96, 176]
+    anchor: {px: [0, 0]}
+    feel: {squash: [{at: 0.0, duration: 0.22, amount: "${squash}"}]}
+    params: {mode: flash, duration: 0.35, image: "${image}", height: "${height}", strength: "${strength}",
+             flash_palette: "${colors}", pulses: "${pulses}", rise: 0.04, hold: 0.18, shake: "${shake}",
+             glow: "${glow}", glow_radius: 5}

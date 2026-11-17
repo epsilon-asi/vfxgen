@@ -1,0 +1,43 @@
+vfxgen: 1
+name: impact_energy
+description: "Energy / magic hit: hot core flash, a fast ring and a spinning dashed ring, jagged crackle arcs, twinkling glints, a small spiky star and a spray of sparks."
+size: [192, 192]
+fps: 30
+duration: 0.6
+loop: false
+blend: additive
+pivot: center
+vars:
+  colors: {default: electric, doc: main colour ramp}
+  radius: {default: 1.0, min: 0.3, max: 1.6, doc: size multiplier of the rings and crackle}
+  rings: {default: 2, min: 0, max: 3, doc: number of rings (0-3)}
+  arcs: {default: 5, min: 0, max: 20, doc: crackle arcs per flicker}
+  glints: {default: 6, min: 0, max: 30, doc: twinkling glints}
+  sparks: {default: 16, min: 0, max: 120, doc: sparks sprayed out}
+  star: {default: true, doc: small spiky star at the core}
+  glow: {default: 1.0, min: 0, max: 3, doc: light exposure}
+channels:
+  light: {kind: light, palette: "${colors}", exposure: "${glow}", bloom: [[1.2, 0.6], [4, 0.6], [12, 0.45]],
+          alpha_gamma: 0.85}
+events:
+  - {name: impact, t: 0.0, data: {material: energy}}
+layers:
+  - id: star
+    effect: star_burst
+    enabled: "${star}"
+    at: [96, 96]
+    anchor: {px: [0, 0]}
+    params: {duration: 0.22, points: 7, radius: "${22 * radius}", spikiness: 1.2, brightness: 0.8}
+  - id: hit
+    effect: energy_hit
+    at: [96, 96]
+    anchor: {px: [0, 0]}
+    params: {duration: 0.6, radius: "${min(48 * radius, 76)}", rings: "${rings}", arcs: "${arcs}",
+             glints: "${glints}"}
+  - id: sparks
+    effect: burst
+    at: [96, 96]
+    anchor: {px: [0, 0]}
+    params: {duration: 0.5, count: "${sparks}", direction: radial, shape: circle, radius: 4, speed_min: 180,
+             speed_max: "${420 * radius}", drag: 5, life_min: 0.2, life_max: 0.45, style: streak, tail: 0.04,
+             size: 1.0, brightness: 1.8, fade_in: 0, fade_out: 1.2, extent: 86}

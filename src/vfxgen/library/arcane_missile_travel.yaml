@@ -1,0 +1,61 @@
+vfxgen: 1
+name: arcane_missile_travel
+description: "Arcane missile in flight (seamless loop): a teardrop of violet plasma trailing two helix strands that twist around a soft streak, shedding glittering motes. Faces +x; pivot on the head - rotate to aim."
+size: [256, 128]
+fps: 24
+duration: 1.0
+loop: true
+blend: additive
+pivot: {px: [204, 64]}
+anchors: {head: [204, 64]}
+track: [{name: head, layer: core, anchor: head}]
+vars:
+  colors: {default: arcane, doc: main colour ramp (shared by the arcane_missile family)}
+  head_size: {default: 1.0, min: 0.5, max: 1.5, doc: head size multiplier (match launch and impact)}
+  trail_length: {default: 1.0, min: 0.3, max: 1.2, doc: trail length multiplier}
+  helix: {default: 1.0, min: 0, max: 3, doc: "helix strand amplitude multiplier (0 = straight)"}
+  twist: {default: 3, min: 0, max: 8, doc: "helix turns travelling down the trail per loop (whole number)"}
+  motes: {default: 20, min: 0, max: 100, doc: glittering motes shed behind the head}
+  intensity: {default: 1.0, min: 0, max: 3, doc: brightness multiplier}
+channels:
+  light: {kind: light, palette: "${colors}", bloom: [[1.5, 0.5], [5, 0.45], [16, 0.35]],
+          exposure: "${intensity}", alpha_gamma: 0.8}
+defs:
+  strand: &strand {period: 1.0, mode: path, path: line, head: fixed, x0: "${-150 * trail_length}", y0: 0,
+                   x1: -4, y1: 0, span: 1.0, samples: 48, width_start: 3.5, width_end: 0.8, brightness: 1.1,
+                   fade: 1.3, head_fade: 0.04, softness: 0.5, core: 0.8, core_width: 0.35,
+                   wave: "${9 * helix * head_size}", wave_count: 2.5, wave_speed: "${int(twist)}", flow: 0}
+layers:
+  - id: streak
+    effect: ribbon
+    at: [204, 64]
+    anchor: {px: [0, 0]}
+    params: {period: 1.0, mode: path, path: line, head: fixed, x0: "${-130 * trail_length}", y0: 0, x1: -2, y1: 0,
+             span: 1.0, samples: 40, width_start: "${15 * head_size}", width_end: 2, taper: 0.8, brightness: 0.55,
+             fade: 1.5, head_fade: 0.06, softness: 1.0, core: 0.9, core_width: 0.2, breakup: 0.5,
+             breakup_scale: 4, flow: 3}
+  - id: strand_a
+    effect: ribbon
+    at: [204, 64]
+    anchor: {px: [0, 0]}
+    params: *strand
+  - id: strand_b
+    effect: ribbon
+    at: [204, 64]
+    anchor: {px: [0, 0]}
+    params:
+      <<: *strand
+      wave_phase: 180
+  - id: core
+    effect: projectile_core
+    at: [204, 64]
+    anchor: head
+    params: {period: 1.0, style: orb, radius: "${9 * head_size}", stretch: 2.4, brightness: 1.0, core: 1.8,
+             rim: 0.7, turbulence: 0.7, halo: 0.3, halo_radius: 2.4, spin: 3, pulse: 0.12, pulse_cycles: 4}
+  - id: motes
+    effect: particles
+    at: [196, 64]
+    anchor: {px: [0, 0]}
+    params: {count: "${int(motes)}", period: 1.0, shape: disk, radius: "${6 * head_size}", angle: 180, spread: 40,
+             speed_min: 60, speed_max: 160, laps_min: 1, laps_max: 2, drag: 1.5, sway: 4, sway_freq: 2, style: plus,
+             size: 0.8, brightness: 1.4, twinkle: 0.6, twinkle_rate: 3, fade_in: 0.1, fade_out: 1.2, extent: 180}

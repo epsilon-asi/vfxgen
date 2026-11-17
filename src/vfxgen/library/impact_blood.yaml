@@ -1,0 +1,45 @@
+vfxgen: 1
+name: impact_blood
+description: "Blood hit: a quick glossy splash, droplets flung out in a cone that stretch along their flight and shrink, and a few heavy drips sagging down; a faint red mist. Game-appropriate, no gore. Spray goes toward -y; rotate so up points away from the struck surface."
+size: [224, 224]
+fps: 30
+duration: 0.85
+loop: false
+blend: alpha
+pivot: {px: [112, 120]}
+vars:
+  colors: {default: blood_gloss, doc: blood colours (shadow -> highlight)}
+  mist_palette: {default: "#5a0a10,#8a1a20,#b04a4a", doc: mist colours (shadow -> lit)}
+  angle: {default: -90, min: -180, max: 180, doc: "spray direction (deg, clockwise from +x; -90 = up)"}
+  spread: {default: 150, min: 10, max: 360, doc: spray cone width (deg)}
+  droplets: {default: 26, min: 0, max: 150, doc: number of droplets}
+  size: {default: 1.0, min: 0.3, max: 2.5, doc: droplet size multiplier}
+  drips: {default: 3, min: 0, max: 12, doc: heavy drips}
+  speed: {default: 1.0, min: 0.2, max: 2, doc: launch speed multiplier}
+  gravity: {default: 1.0, min: 0, max: 3, doc: gravity multiplier}
+  gloss: {default: 0.9, min: 0, max: 2, doc: specular highlight strength}
+  mist: {default: 1.0, min: 0, max: 3, doc: red mist amount (0 = none)}
+channels:
+  mist: {kind: smoke, palette: "${mist_palette}", density: 3.0, shadow: 0.4, size_ref: 224}
+  blood: {kind: volume, palette: "${colors}", density: 1.4, bump: 5, soft: 0.8, shadow: 0.35, wrap: 0.6,
+          spec: "${gloss}", spec_power: 36, rim: 0.35, size_ref: 224}
+events:
+  - {name: impact, t: 0.0, data: {material: blood}}
+layers:
+  - id: mist
+    effect: smoke_burst
+    enabled: "${mist > 0}"
+    at: [112, 120]
+    anchor: {px: [0, 0]}
+    rotate: "${angle + 90}"
+    channels: {smoke: mist}
+    params: {duration: 0.6, mode: ring, count: 6, spread: "${120 * speed}", spread_start: 2, squash: 0.6,
+             drag: 6, rise: 4, ground: false, extent: 60, radius_start: 5, radius_end: 15, life_min: 0.35,
+             life_max: 0.55, stagger: 0.02, density: "${0.05 * mist}", wispiness: 0.8}
+  - id: blood
+    effect: blood_splatter
+    at: [112, 120]
+    anchor: {px: [0, 0]}
+    channels: {volume: blood}
+    params: {duration: 0.85, angle: "${angle}", spread: "${spread}", count: "${droplets}", size: "${size}",
+             drips: "${drips}", speed: "${speed}", gravity: "${1100 * gravity}", extent: 96}

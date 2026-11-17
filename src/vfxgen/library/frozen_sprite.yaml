@@ -1,0 +1,45 @@
+vfxgen: 1
+name: frozen_sprite
+description: "Frozen character (loop): icy blue tint creeping in from the edges, ice spikes growing out of the silhouette, a sheen sweeping over the ice, cold mist sinking off and twinkling frost sparkles."
+size: [192, 224]
+fps: 16
+duration: 2.0
+loop: true
+blend: alpha
+pivot: {px: [96, 196]}
+anchors: {feet: [96, 196]}
+vars:
+  colors: {default: frost, doc: "glints / sheen / glow colour ramp"}
+  ice_palette: {default: ice, doc: ice spike colours (shadow -> lit)}
+  mist_palette: {default: steam, doc: mist colours (shadow -> lit)}
+  image: {default: hero.png, doc: "sprite image (PNG with alpha)"}
+  height: {default: 128, min: 16, max: 150, doc: displayed sprite height (px)}
+  tint_color: {default: "#8fd4ff", doc: colour the body is tinted toward}
+  freeze: {default: 0.85, min: 0, max: 1, doc: tint amount}
+  cover: {default: 0.97, min: 0, max: 1, doc: fraction of the body covered by ice tint (edges first)}
+  crystals: {default: 24, min: 0, max: 120, doc: number of ice spikes on the edges}
+  crystal_size: {default: 8, min: 2, max: 20, doc: ice spike length (px)}
+  mist: {default: 1.0, min: 0, max: 3, doc: cold mist density (0 = off)}
+  sparkles: {default: 14, min: 0, max: 100, doc: number of frost sparkles}
+  sheen: {default: 0.7, min: 0, max: 3, doc: brightness of the sheen sweeping over the ice}
+channels:
+  solid: {kind: solid}
+  mist: {kind: smoke, palette: "${mist_palette}", density: 0.8, shadow: 0.2, size_ref: 224}
+  light: {kind: light, palette: "${colors}", bloom: [[1.5, 0.45], [5, 0.35], [12, 0.2]], exposure: 1.0, alpha_gamma: 0.85}
+layers:
+  - id: sprite
+    effect: sprite_loop
+    at: [96, 196]
+    anchor: {px: [0, 0]}
+    params: {period: 2.0, image: "${image}", height: "${height}", tint: "${freeze}", tint_palette: "${tint_color}",
+             cover: "${cover}", sweep: 0.55, rim: 0.3, outline: 0.12, sheen: "${sheen}", pulse: 0.15, pulse_cycles: 1}
+  - id: ice
+    effect: sprite_emitter
+    at: [96, 196]
+    anchor: {px: [0, 0]}
+    channels: {smoke: mist}
+    params: {period: 2.0, image: "${image}", height: "${height}", style: frozen, region: edge, edge_width: 2.0,
+             crystals: "${crystals}", crystal_size: "${crystal_size}", ice_palette: "${ice_palette}", mist: "${mist}",
+             count: "${sparkles}", speed_min: 2, speed_max: 10, gravity: 0, drag: 0, curl: 0, laps_min: 1, laps_max: 2,
+             particle_style: glint, size: 1.0, brightness: 1.8, twinkle: 0.6, fade_in: 0.3, fade_out: 1.0, halo: 0.1,
+             extent: 40}

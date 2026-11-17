@@ -1,0 +1,36 @@
+vfxgen: 1
+name: button_shine
+description: "Button shine (loop): a diagonal highlight band with a thin trailing band sweeps across a rounded button, lighting its rim, then leaves a corner sparkle. Overlay additively on a button sprite."
+size: [224, 96]
+fps: 30
+duration: "${interval}"
+loop: true
+blend: additive
+pivot: center
+vars:
+  colors: {default: glint, doc: shine colour ramp (faint -> hot)}
+  interval: {default: 2.0, min: 0.5, max: 8, doc: seconds between sweeps (loop length; x30 fps must be whole)}
+  width: {default: 180, min: 20, max: 200, doc: button width (px)}
+  height: {default: 60, min: 10, max: 76, doc: button height (px)}
+  corner_radius: {default: 18, min: 0, max: 38, doc: button corner radius (px)}
+  shape: {default: rect, choices: [rect, ellipse], doc: "button shape: rect (rounded) or ellipse"}
+  angle: {default: 25, min: -60, max: 60, doc: band tilt from vertical (deg)}
+  band_width: {default: 14, min: 2, max: 60, doc: main band half-width (px)}
+  sweep_time: {default: 0.55, min: 0.1, max: 3, doc: seconds the band takes to cross}
+  brightness: {default: 1.0, min: 0, max: 3, doc: band brightness}
+  rim: {default: 0.9, min: 0, max: 3, doc: rim highlight as the band passes}
+  idle: {default: 0.1, min: 0, max: 1, doc: faint rim glow that stays between sweeps (0 = none)}
+  sparkle: {default: 1.0, min: 0, max: 3, doc: corner sparkle brightness (0 = none)}
+channels:
+  light: {kind: light, palette: "${colors}", bloom: [[1.5, 0.35], [5, 0.25]], alpha_gamma: 0.9}
+events:
+  - {name: shine, t: 0.0, data: {}}
+layers:
+  - id: shine
+    effect: shine_sweep
+    at: [112, 48]
+    anchor: {px: [0, 0]}
+    params: {period: "${interval}", shape: "${shape}", width: "${width}", height: "${height}",
+             corner_radius: "${corner_radius}", angle: "${angle}", band_width: "${band_width}",
+             sweep_time: "${min(sweep_time, interval)}", brightness: "${0.9 * brightness}", rim: "${rim}",
+             idle: "${idle}", sparkle: "${sparkle}"}

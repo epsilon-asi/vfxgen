@@ -1,0 +1,104 @@
+vfxgen: 1
+name: frost_nova
+description: Ice explosion - crystal shards burst outward under a noise-broken frost ring, ice dust, twinkling sparkles and lingering cold mist.
+size: [384, 384]
+fps: 24
+duration: "${duration}"
+vars:
+  colors: {default: frost, doc: "main colour ramp (edges, ring, sparkles)"}
+  ice_palette: {default: ice, doc: shard facet colours (shadow -> lit)}
+  mist_palette: {default: steam, doc: mist colours (shadow -> lit)}
+  duration: {default: 1.0, min: 0.3, max: 4, doc: seconds the nova lasts}
+  shard_count: {default: 14, min: 0, max: 60, doc: big shards (spread evenly around the burst)}
+  small_shards: {default: 30, min: 0, max: 200, doc: small shards (random directions)}
+  shard_size: {default: 1.0, min: 0.2, max: 3, doc: shard length multiplier}
+  spread: {default: 1.0, min: 0, max: 2, doc: how far shards and ice dust travel}
+  ring: {default: true, doc: draw the frost ring and its inner haze}
+  ring_radius: {default: 1.0, min: 0.1, max: 1.15, doc: frost ring final radius multiplier}
+  mist_amount: {default: 1.0, min: 0, max: 3, doc: cold mist density (0 = off)}
+  sparkles: {default: 40, min: 0, max: 300, doc: twinkling four-point sparkles riding the ring}
+  ice_dust: {default: 70, min: 0, max: 400, doc: tiny fast ice streaks}
+  glow: {default: 1.0, min: 0, max: 4, doc: "light exposure for edges, ring and sparkles"}
+channels:
+  mist: {kind: smoke, palette: "${mist_palette}", density: 0.7, shadow: 0.35, size_ref: 384}
+  shards: {kind: solid, palette: "${ice_palette}"}
+  light: {kind: light, palette: "${colors}", bloom: [[1.2, 0.45], [4.5, 0.4], [14, 0.3]],
+          exposure: "${1.1 * glow}", alpha_gamma: 0.9}
+layers:
+  - id: flash
+    effect: flash
+    at: [192, 192]
+    anchor: {px: [0, 0]}
+    params: {duration: "${0.6 * duration}", radius: 10, grow: "${70 / duration}", brightness: 3.0,
+             decay: "${0.05 * duration}", afterglow_radius: 26, afterglow_brightness: 0.7,
+             afterglow_decay: "${0.15 * duration}"}
+  - id: frost_ring
+    effect: shockwave
+    enabled: "${ring}"
+    at: [192, 192]
+    anchor: {px: [0, 0]}
+    params:
+      duration: "${0.75 * duration}"
+      radius_start: 12
+      radius_end: "${12 + min(140 * ring_radius, 160)}"
+      expand_time: "${0.17 * duration}"
+      width_start: 1.15
+      width_end: 2.7
+      brightness: 1.25
+      fade_time: "${0.6 * duration}"
+      breakup: 0.85
+      breakup_scale: 3
+      haze: 0.2
+  - id: mist
+    effect: frost_mist
+    at: [192, 192]
+    anchor: {px: [0, 0]}
+    channels: {smoke: mist}
+    params:
+      duration: "${duration}"
+      amount: "${mist_amount}"
+      count: "${90 if mist_amount > 0 else 0}"
+      radius_start: 12
+      radius_end: "${12 + min(140 * ring_radius, 160)}"
+      expand_time: "${0.17 * duration}"
+  - id: shards
+    effect: ice_shards
+    at: [192, 192]
+    anchor: {px: [0, 0]}
+    channels: {solid: shards, light: light}
+    params: {duration: "${duration}", shard_count: "${shard_count}", small_shards: "${small_shards}",
+             shard_size: "${shard_size}", spread: "${spread}", max_distance: 174}
+  - id: ice_dust
+    effect: burst
+    at: [192, 192]
+    anchor: {px: [0, 0]}
+    params:
+      duration: "${duration}"
+      count: "${ice_dust}"
+      speed_min: "${120 * spread / duration}"
+      speed_max: "${330 * spread / duration}"
+      drag: "${5 / duration}"
+      life_min: "${0.35 * duration}"
+      life_max: "${0.8 * duration}"
+      style: streak
+      tail: "${0.05 * duration}"
+      size: 0.6
+      brightness: 1.4
+      brightness_var: 0
+      fade_in: 0
+      fade_out: 1.3
+      extent: 180
+  - id: sparkles
+    effect: ring_glints
+    at: [192, 192]
+    anchor: {px: [0, 0]}
+    params:
+      duration: "${duration}"
+      count: "${sparkles}"
+      radius_start: 12
+      radius_end: "${12 + min(140 * ring_radius, 160)}"
+      expand_time: "${0.17 * duration}"
+      start_min: "${0.05 * duration}"
+      start_max: "${0.6 * duration}"
+      life_min: "${0.18 * duration}"
+      life_max: "${0.32 * duration}"

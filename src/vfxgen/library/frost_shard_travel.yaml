@@ -1,0 +1,59 @@
+vfxgen: 1
+name: frost_shard_travel
+description: "Frost shard in flight (seamless loop): a faceted ice dart rolling as it flies, trailing a streaky frost ribbon, a wisp of cold vapour and glittering ice dust. Faces +x; pivot on the tip - rotate to aim."
+size: [256, 128]
+fps: 24
+duration: 1.0
+loop: true
+blend: alpha
+pivot: {px: [208, 64]}
+anchors: {head: [208, 64]}
+track: [{name: head, layer: shard, anchor: head}]
+vars:
+  colors: {default: frost, doc: main colour ramp (shared by the frost_shard family)}
+  ice_palette: {default: ice, doc: shard facet colours (shadow -> lit)}
+  mist_palette: {default: steam, doc: vapour trail colours (shadow -> lit)}
+  head_size: {default: 1.0, min: 0.5, max: 1.5, doc: shard size multiplier (match launch and impact)}
+  trail_length: {default: 1.0, min: 0.3, max: 1.2, doc: trail length multiplier}
+  mist: {default: 1.0, min: 0, max: 3, doc: "vapour trail density (0 = off)"}
+  dust: {default: 22, min: 0, max: 100, doc: glittering ice dust specks}
+  glow: {default: 1.0, min: 0, max: 3, doc: light exposure}
+channels:
+  mist: {kind: smoke, palette: "${mist_palette}", density: 1.0, shadow: 0.35, size_ref: 256}
+  shards: {kind: solid, palette: "${ice_palette}"}
+  light: {kind: light, palette: "${colors}", bloom: [[1.2, 0.45], [4.5, 0.4], [14, 0.3]],
+          exposure: "${1.1 * glow}", alpha_gamma: 0.9}
+layers:
+  - id: vapour
+    effect: ribbon
+    enabled: "${mist > 0}"
+    at: [208, 64]
+    anchor: {px: [0, 0]}
+    channels: {smoke: mist}
+    params: {period: 1.0, mode: path, path: line, head: fixed, x0: "${-170 * trail_length}", y0: 0, x1: -12, y1: 0,
+             span: 1.0, samples: 40, width_start: "${12 * head_size}", width_end: 26, taper: 0.7,
+             brightness: "${0.9 * mist}", fade: 1.2, head_fade: 0.15, softness: 1.0, core: 0, wobble: 6,
+             wobble_scale: 2, breakup: 0.85, breakup_scale: 4, flow: 2, output: smoke}
+  - id: streak
+    effect: ribbon
+    at: [208, 64]
+    anchor: {px: [0, 0]}
+    params: {period: 1.0, mode: path, path: line, head: fixed, x0: "${-150 * trail_length}", y0: 0, x1: -8, y1: 0,
+             span: 1.0, samples: 40, width_start: "${8 * head_size}", width_end: 1, taper: 1.0, brightness: 1.0,
+             fade: 1.6, head_fade: 0.05, softness: 0.7, core: 1.0, core_width: 0.25, wobble: 2,
+             wobble_scale: 2, breakup: 0.6, breakup_scale: 5, flow: 3}
+  - id: shard
+    effect: projectile_core
+    at: [208, 64]
+    anchor: head
+    channels: {solid: shards}
+    params: {period: 1.0, style: shard, radius: "${16 * head_size}", thickness: 0.4, core: 0.9, rim: 0.9,
+             halo: 0.22, halo_radius: 1.6, spin: 2, pulse: 0.0, pulse_cycles: 0}
+  - id: dust
+    effect: particles
+    at: [196, 64]
+    anchor: {px: [0, 0]}
+    params: {count: "${int(dust)}", period: 1.0, shape: box, radius: 3, radius_y: "${6 * head_size}", angle: 180,
+             spread: 22, speed_min: "${150 * trail_length}", speed_max: "${300 * trail_length}", laps_min: 2,
+             laps_max: 3, drag: 1.0, style: glint, size: 0.7, brightness: 1.6, brightness_var: 0.5,
+             twinkle: 0.6, twinkle_rate: 3, fade_in: 0.1, fade_out: 1.2, extent: 185}

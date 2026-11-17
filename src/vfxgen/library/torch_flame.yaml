@@ -1,0 +1,72 @@
+vfxgen: 1
+name: torch_flame
+description: Small steady torch / candle flame with flicker, a warm halo and the odd rising spark.
+size: [256, 256]
+fps: 24
+duration: 1.0
+loop: true
+anchors: {base: [128, 184.32]}
+vars:
+  colors: {default: fire, doc: main colour ramp}
+  height: {default: 1.0, min: 0.3, max: 1.3, doc: flame height multiplier}
+  width: {default: 1.0, min: 0.3, max: 3, doc: flame width multiplier}
+  flicker: {default: 1.0, min: 0, max: 3, doc: strength of the noise flicker / tongue break-up}
+  intensity: {default: 1.0, min: 0, max: 4, doc: brightness multiplier}
+  speed: {default: 2, min: 1, max: 6, doc: rise cycles per loop (whole number keeps the loop seamless)}
+  glow: {default: 1.0, min: 0, max: 4, doc: strength of the surrounding warm halo (0 = off)}
+  sparks: {default: 6, min: 0, max: 60, doc: number of small rising sparks}
+channels:
+  light: {kind: light, palette: "${colors}", bloom: [[1.5, 0.3], [5, 0.25], [14, 0.2]], exposure: 0.95,
+          alpha_gamma: 0.65}
+layers:
+  - id: halo
+    effect: glow
+    at: [128, "${184.32 - 36 * height}"]
+    params: {radius: 26, brightness: "${0.10 * glow * intensity}", halo_radius: 44,
+             halo_brightness: "${0.03 * glow * intensity}", pulse: "${min(0.08 * flicker, 1)}",
+             pulse_cycles: "${3 * int(round(speed))}"}
+  - id: flame
+    effect: flame
+    at: [128, 184.32]
+    anchor: base
+    params:
+      style: torch
+      height: "${120 * height}"
+      half_width: "${21 * width}"
+      cell_x: 13
+      cell_y: 34
+      speed: "${int(round(speed))}"
+      noise_base: "${0.18 * flicker}"
+      noise_tip: "${0.8 * flicker}"
+      octaves: 4
+      top: 1.15
+      sway: 1.0
+      streaks: 0
+      core: 0
+      intensity: "${intensity}"
+      tip_fade: 1.55
+  - id: sparks
+    effect: particles
+    at: [128, "${184.32 - 72 * height}"]
+    anchor: {px: [0, 0]}
+    params:
+      count: "${int(sparks)}"
+      period: 1.0
+      shape: box
+      radius: 6
+      radius_y: 0
+      angle: -90
+      spread: 8
+      speed_min: "${(154.32 - 72 * height) * int(round(speed))}"
+      speed_max: "${(154.32 - 72 * height) * int(round(speed))}"
+      laps_min: "${int(round(speed))}"
+      laps_max: "${int(round(speed))}"
+      sway: 5
+      sway_freq: 1
+      style: dot
+      size: 0.8
+      brightness: 3.2
+      brightness_var: 0.3
+      fade_in: 0.35
+      fade_out: 1.5
+      extent: 170

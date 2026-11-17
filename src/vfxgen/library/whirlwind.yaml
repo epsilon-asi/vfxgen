@@ -1,0 +1,37 @@
+vfxgen: 1
+name: whirlwind
+description: Tornado funnel of spiralling wind streaks with circling base specks (seamless loop).
+size: [256, 384]
+fps: 16
+duration: "${period}"
+loop: true
+vars:
+  colors: {default: wind, doc: main colour ramp of the wind light}
+  period: {default: 1.0, min: 0.25, max: 4, doc: loop length in seconds (one rise per loop)}
+  streaks: {default: 340, min: 0, max: 1500, doc: number of thin wind streaks}
+  bands: {default: 50, min: 0, max: 300, doc: number of soft wide bands behind the streaks}
+  dust: {default: 70, min: 0, max: 400, doc: number of specks circling the base}
+  dust_ring: {default: true, doc: draw the speck ring at the base}
+  spin: {default: 1, min: 1, max: 4, doc: whole-number spin multiplier (keeps the loop seamless)}
+  top_radius: {default: 1.0, min: 0.2, max: 1.22, doc: funnel width at the top (1 = default)}
+  sway: {default: 1.0, min: 0, max: 3, doc: how far the funnel snakes sideways}
+  streak_width: {default: 1.0, min: 0.2, max: 4, doc: width multiplier for streaks and bands}
+  glow: {default: 1.0, min: 0, max: 4, doc: light exposure / brightness}
+channels:
+  light: {kind: light, palette: "${colors}", bloom: [[2.4, 0.35], [8, 0.25]], exposure: "${1.1 * glow}",
+          alpha_gamma: 1.0}
+layers:
+  - id: funnel
+    effect: wind_funnel
+    at: [128, 352]
+    anchor: {px: [0, 0]}
+    params:
+      period: "${period}"
+      streaks: "${streaks}"
+      bands: "${bands}"
+      dust: "${dust if dust_ring else 0}"
+      spin: "${spin}"
+      top_radius: "${min(46 * top_radius, 56) * 2}"
+      sway: "${14 * sway}"
+      streak_width: "${1.4 * streak_width}"
+      band_width: "${7 * streak_width}"

@@ -1,0 +1,44 @@
+vfxgen: 1
+name: fire_bolt_travel
+description: "Fire bolt in flight (seamless loop): a white-hot head trailing a streaming, tearing flame tail and embers. Faces +x; pivot on the head - rotate to aim."
+size: [256, 128]
+fps: 24
+duration: 1.0
+loop: true
+blend: additive
+pivot: {px: [200, 64]}
+anchors: {head: [200, 64]}
+track: [{name: head, layer: core, anchor: head}]
+vars:
+  colors: {default: fire, doc: main colour ramp (shared by the fire_bolt family)}
+  head_size: {default: 1.0, min: 0.5, max: 1.5, doc: head size multiplier (match launch and impact)}
+  trail_length: {default: 1.0, min: 0.3, max: 1.2, doc: flame trail length multiplier}
+  turbulence: {default: 1.0, min: 0, max: 3, doc: flame tail noise strength}
+  speed: {default: 2, min: 1, max: 5, doc: "trail streaming speed (noise periods per loop, whole number)"}
+  embers: {default: 24, min: 0, max: 120, doc: embers shed from the head}
+  intensity: {default: 1.0, min: 0, max: 3, doc: brightness multiplier}
+channels:
+  light: {kind: light, palette: "${colors}", exposure: 0.95, alpha_gamma: 0.62,
+          bloom: [[1.5, 0.25], [6, 0.25], [18, 0.2]]}
+layers:
+  - id: trail
+    effect: flame_trail
+    at: [200, 64]
+    anchor: head
+    params: {period: 1.0, head_radius: "${13 * head_size}", trail_length: "${120 * trail_length}", trail_width: 0.75,
+             turbulence: "${turbulence}", speed: "${int(speed)}", cell: 18, intensity: "${intensity}"}
+  - id: core
+    effect: projectile_core
+    at: [200, 64]
+    anchor: head
+    params: {period: 1.0, style: orb, radius: "${8 * head_size}", stretch: 1.8, brightness: "${0.8 * intensity}",
+             core: "${1.6 * intensity}", rim: 0.3, turbulence: 0.6, halo: "${0.22 * intensity}", halo_radius: 2.6,
+             spin: 3, pulse: 0.1, pulse_cycles: 6, flicker: 0.15, flicker_rate: 24}
+  - id: embers
+    effect: particles
+    at: [194, 64]
+    anchor: {px: [0, 0]}
+    params: {count: "${int(embers)}", period: 1.0, shape: box, radius: 2, radius_y: "${8 * head_size}", angle: 180,
+             spread: 26, speed_min: "${220 * trail_length}", speed_max: "${380 * trail_length}", laps_min: 2, laps_max: 4,
+             sway: 3, sway_freq: 2, style: streak, tail: 0.02, size: 0.8, brightness: 1.8, brightness_var: 0.4,
+             fade_in: 0.2, fade_out: 1.0, extent: 175}
